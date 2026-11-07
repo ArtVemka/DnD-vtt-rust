@@ -645,6 +645,10 @@ fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
 
 fn main() {
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            show_window(app);
+        }))
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             app_config,

@@ -101,6 +101,13 @@ function join(url, payload) {
     cdp = connectCdp(page.webSocketDebuggerUrl);
     await cdp.ready;
 
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      const ready = await evaluate(cdp, `typeof window.desktop !== 'undefined' && typeof window.desktop.getConfig === 'function'`);
+      if (ready) break;
+      if (attempt === 59) throw new Error('desktop bridge did not initialize');
+      await sleep(250);
+    }
+
     const boot = await evaluate(cdp, `(async () => {
       const config = await desktop.getConfig();
       const created = await desktop.createCampaign('Smoke');

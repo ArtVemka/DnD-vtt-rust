@@ -3,3 +3,4 @@
 /dist
 /data
 *.log
+/crates/dnd-desktop/gen/schemas/
