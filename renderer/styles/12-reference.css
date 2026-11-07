@@ -1,0 +1,528 @@
+/* ==================================================================
+ * Reference look: dark oak table, aged parchment side panels and gilt
+ * frames. Loaded last so it wins over the base themes; each theme keeps
+ * its own accent through --ref-gold / --ref-paper overrides below.
+ * ================================================================== */
+
+[data-theme] {
+  --ref-paper: #ead8b0;
+  --ref-paper-2: #d6bb85;
+  --ref-ink: #2b1a0e;
+  --ref-ink-dim: #5c4225;
+  --ref-wood: #1a1009;
+  --ref-wood-2: #2c1b10;
+  --ref-gold: #c9a45e;
+  --ref-gold-2: #e7cb92;
+}
+
+[data-theme='standart'] {
+  --ref-paper: #e8d7b2;
+  --ref-paper-2: #cfb684;
+  --ref-gold: #c7a566;
+}
+
+[data-theme='les'] {
+  --ref-paper: #e3dbb2;
+  --ref-paper-2: #c9bd88;
+  --ref-gold: #b9a45e;
+}
+
+[data-theme='magiya'] {
+  --ref-paper: #e6d6c8;
+  --ref-paper-2: #cdb7a5;
+  --ref-gold: #c8a878;
+}
+
+[data-theme='okean'] {
+  --ref-paper: #dcd8bc;
+  --ref-paper-2: #bfb995;
+  --ref-gold: #b7a97a;
+}
+
+[data-theme='traktir'] {
+  --ref-paper: #ead8b0;
+  --ref-paper-2: #d6bb85;
+  --ref-gold: #d0a962;
+}
+
+[data-theme='par'] {
+  --ref-paper: #e4d0a4;
+  --ref-paper-2: #cbb07a;
+  --ref-gold: #c9a05a;
+}
+
+/* ------------------------------------------------------------- Стол */
+
+html,
+body {
+  background-color: #0a0603;
+}
+
+body {
+  background-image:
+    radial-gradient(
+      62% 46% at 50% -8%,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(42% 38% at 0% 100%, rgba(0, 0, 0, 0.6), transparent 70%),
+    radial-gradient(42% 38% at 100% 100%, rgba(0, 0, 0, 0.55), transparent 70%),
+    repeating-linear-gradient(
+      91deg,
+      rgba(255, 224, 166, 0.018) 0 1px,
+      transparent 1px 6px
+    ),
+    repeating-linear-gradient(
+      3deg,
+      rgba(0, 0, 0, 0.13) 0 2px,
+      transparent 2px 11px
+    ),
+    linear-gradient(180deg, #1e130a, #0a0603 68%, #150d07);
+  background-attachment: fixed;
+}
+
+[data-tone='light'] body {
+  background-image:
+    radial-gradient(60% 45% at 50% -10%, var(--wash), transparent 66%),
+    repeating-linear-gradient(
+      3deg,
+      rgba(90, 60, 25, 0.05) 0 2px,
+      transparent 2px 12px
+    ),
+    linear-gradient(180deg, #efe4cd, #d6c3a0);
+}
+
+/* ------------------------------------------------------------ Топбар */
+
+[data-theme] .topbar {
+  position: relative;
+  z-index: 3;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 220, 160, 0.035) 0 2px,
+      transparent 2px 9px
+    ),
+    linear-gradient(180deg, #3b2616, #1a1009 72%, #120b06);
+  border-bottom: 1px solid color-mix(in srgb, var(--ref-gold) 70%, #000);
+  box-shadow:
+    0 1px 0 rgba(255, 226, 170, 0.14),
+    0 2px 0 #090502,
+    0 10px 26px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme] .topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ref-gold),
+    transparent
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+[data-theme] .topbar__title {
+  color: var(--ref-gold-2);
+  text-shadow: 0 1px 0 #000, 0 0 14px rgba(231, 203, 146, 0.25);
+}
+
+[data-theme] .topbar__titles {
+  position: relative;
+  padding-left: 76px;
+}
+
+[data-theme] .topbar__titles::before {
+  content: 'D&D';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-title);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: #b53a2a;
+  text-shadow:
+    0 1px 0 #4a0f08,
+    0 0 14px rgba(181, 58, 42, 0.35);
+  pointer-events: none;
+}
+
+[data-theme] .topbar__sub {
+  color: color-mix(in srgb, var(--ref-gold-2) 55%, #8d7550);
+}
+
+/* Время игры — центральная табличка, как на референсе. */
+@media (min-width: 1380px) {
+  [data-theme] #game-time {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    padding: 5px 26px 6px;
+    color: var(--ref-gold-2);
+    background:
+      radial-gradient(120% 160% at 50% 0%, rgba(255, 226, 170, 0.14), transparent 60%),
+      linear-gradient(180deg, #2c1b10, #120b06);
+    border: 1px solid color-mix(in srgb, var(--ref-gold) 78%, #000);
+    border-radius: 4px 4px 16px 16px / 4px 4px 10px 10px;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.65),
+      0 0 0 3px rgba(9, 5, 2, 0.75),
+      0 0 18px rgba(201, 164, 94, 0.22),
+      0 8px 18px rgba(0, 0, 0, 0.55);
+    font-family: var(--font-title);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  #game-time::after {
+    content: 'Отдых';
+    display: block;
+    margin-top: 1px;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--ref-gold-2) 62%, #8d7550);
+    text-align: center;
+  }
+}
+
+#role-badge {
+  background: linear-gradient(180deg, #d9b975, #8d6a3c);
+  color: #241407;
+  border: 1px solid #e7cb92;
+  border-radius: 46% 46% 40% 40% / 38% 38% 62% 62%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 220, 0.7),
+    0 0 0 2px #120b06,
+    0 3px 8px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-title);
+  letter-spacing: 0.08em;
+  padding: 5px 10px 4px;
+}
+
+#conn-badge {
+  border-color: color-mix(in srgb, var(--ref-gold) 55%, #000);
+}
+
+#btn-save-campaign {
+  background: linear-gradient(180deg, var(--ref-paper), var(--ref-paper-2));
+  color: var(--ref-ink);
+  border-color: #8a6638;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 252, 238, 0.7),
+    0 0 0 2px #120b06,
+    0 3px 10px rgba(0, 0, 0, 0.45);
+  font-family: var(--font-title);
+  letter-spacing: 0.03em;
+}
+
+#btn-stop-host {
+  background: linear-gradient(180deg, #7c2c22, #4a1712);
+  border-color: #b04a3a;
+  color: #f4dcc4;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 200, 180, 0.25),
+    0 0 0 2px #120b06,
+    0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* --------------------------------------------------- Левая колонка */
+
+.col--left > .panel {
+  /* Токены панели: всё внутри автоматически перекрашивается в тёмные
+     чернила, не требуя отдельных правил на каждый текст. */
+  --text: var(--ref-ink);
+  --text-dim: var(--ref-ink-dim);
+  --muted: #74562f;
+  --gold: #7a5426;
+  --accent: #8a5a1e;
+  --accent-hover: #6b4314;
+  --accent-soft: rgba(120, 80, 30, 0.18);
+  --border: #a8875a;
+  --border-strong: #7a5a30;
+  --surface: rgba(255, 250, 235, 0.45);
+  --surface-2: rgba(246, 232, 200, 0.65);
+  --surface-3: rgba(232, 212, 168, 0.75);
+  --hairline: rgba(90, 60, 25, 0.22);
+  --sheen: rgba(255, 252, 238, 0.35);
+
+  color: var(--ref-ink);
+  background:
+    radial-gradient(120% 70% at 15% 0%, rgba(255, 252, 240, 0.75), transparent 55%),
+    radial-gradient(90% 60% at 85% 100%, rgba(120, 80, 30, 0.22), transparent 65%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(120, 80, 30, 0.045) 0 1px,
+      transparent 1px 4px
+    ),
+    linear-gradient(160deg, var(--ref-paper), var(--ref-paper-2));
+  border: 1px solid #8a6638;
+  border-radius: 3px 7px 4px 8px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 248, 225, 0.55),
+    inset 0 0 34px rgba(105, 68, 24, 0.24),
+    0 0 0 2px #24150b,
+    0 0 0 3px color-mix(in srgb, var(--ref-gold) 75%, #6b4a26),
+    0 10px 24px rgba(0, 0, 0, 0.55);
+}
+
+.col--left > .panel::before,
+.col--left > .panel::after {
+  border-color: rgba(110, 75, 30, 0.45);
+  opacity: 0.65;
+}
+
+.col--left > .panel > .panel__title {
+  color: #3a2412;
+  border-bottom: 1px solid rgba(110, 75, 30, 0.32);
+  box-shadow: 0 1px 0 rgba(255, 248, 225, 0.55);
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.col--left .panel__fold {
+  background: linear-gradient(180deg, #efe0bc, #d3b781);
+  border-color: #8a6638;
+  color: #3a2412;
+}
+
+.col--left > .panel > .panel__title::before {
+  background:
+    radial-gradient(circle at 35% 30%, #fff4d6, #b38b4a 55%, #6b4a26 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 250, 230, 0.8),
+    0 1px 0 rgba(70, 45, 15, 0.5);
+}
+
+.col--left .input,
+.col--left .select,
+.col--left textarea {
+  background: rgba(255, 251, 238, 0.55);
+  border-color: #a8875a;
+  color: #2b1a0e;
+  box-shadow: inset 0 2px 5px rgba(90, 60, 20, 0.14);
+}
+
+.col--left .input::placeholder,
+.col--left textarea::placeholder {
+  color: #8a704a;
+}
+
+.col--left .btn {
+  background: linear-gradient(180deg, #efe0bc, #d3b781);
+  border-color: #8a6638;
+  color: #2b1a0e;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 252, 238, 0.75),
+    inset 0 -2px 0 rgba(90, 60, 20, 0.2),
+    0 2px 0 #6b4a26,
+    0 5px 10px rgba(0, 0, 0, 0.28);
+  text-shadow: none;
+}
+
+.col--left .btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f8ecd0, #ddc38f);
+  transform: translateY(-1px);
+}
+
+.col--left .badge {
+  background: rgba(120, 80, 30, 0.14);
+  border-color: #9a7644;
+  color: #3a2412;
+}
+
+.col--left .muted,
+.col--left .status {
+  color: #74562f;
+}
+
+/* --------------------------------------------------- Правая колонка */
+
+.col--right .panel--tab {
+  background:
+    radial-gradient(110% 60% at 50% 0%, rgba(255, 220, 160, 0.06), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 220, 160, 0.025) 0 1px,
+      transparent 1px 6px
+    ),
+    linear-gradient(180deg, #2c1b10, #140c07);
+  border: 1px solid color-mix(in srgb, var(--ref-gold) 55%, #000);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.7),
+    inset 0 0 50px rgba(0, 0, 0, 0.6),
+    0 0 0 3px #0e0805,
+    0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+.tabs__btn {
+  background: linear-gradient(180deg, #3a2416, #1b1009);
+  border: 1px solid color-mix(in srgb, var(--ref-gold) 45%, #2a1a0e);
+  color: var(--ref-gold-2);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 226, 170, 0.12),
+    0 2px 0 #090502;
+}
+
+.tabs__btn:hover {
+  border-color: var(--ref-gold);
+  color: #fff0cf;
+}
+
+.tabs__btn.is-active {
+  background: linear-gradient(180deg, #dcb974, #8d6a3c);
+  border-color: #f0d8a4;
+  color: #241407;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 226, 0.7),
+    0 0 14px rgba(201, 164, 94, 0.45),
+    0 2px 0 #090502;
+}
+
+/* ---------------------------------------------------------- Карта */
+
+.map-stage {
+  background:
+    radial-gradient(58% 48% at 50% 46%, rgba(201, 164, 94, 0.14), transparent 72%),
+    repeating-linear-gradient(
+      2deg,
+      rgba(255, 220, 160, 0.022) 0 1px,
+      transparent 1px 7px
+    ),
+    #0a0603;
+  border: 12px solid transparent;
+  border-image: linear-gradient(
+      135deg,
+      #8a6638 0%,
+      #2a180d 26%,
+      #4a3018 52%,
+      #8a6638 78%,
+      #2a180d 100%
+    )
+    1;
+  box-shadow:
+    0 0 0 2px #0b0704,
+    0 0 0 4px var(--ref-gold),
+    0 0 0 6px #0b0704,
+    inset 0 0 90px rgba(0, 0, 0, 0.85),
+    0 20px 50px rgba(0, 0, 0, 0.7);
+  border-radius: 2px;
+}
+
+.map-stage::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  z-index: 5;
+  pointer-events: none;
+  border: 1px solid rgba(231, 203, 146, 0.22);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+}
+
+.map-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 0 0,
+      transparent 0 24px,
+      rgba(231, 203, 146, 0.5) 25px 26px,
+      transparent 27px
+    ),
+    radial-gradient(
+      circle at 100% 0,
+      transparent 0 24px,
+      rgba(231, 203, 146, 0.5) 25px 26px,
+      transparent 27px
+    ),
+    radial-gradient(
+      circle at 0 100%,
+      transparent 0 24px,
+      rgba(231, 203, 146, 0.5) 25px 26px,
+      transparent 27px
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      transparent 0 24px,
+      rgba(231, 203, 146, 0.5) 25px 26px,
+      transparent 27px
+    ),
+    radial-gradient(circle at 0 0, rgba(231, 203, 146, 0.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 100% 0, rgba(231, 203, 146, 0.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 0 100%, rgba(231, 203, 146, 0.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 100% 100%, rgba(231, 203, 146, 0.65) 0 2px, transparent 3px);
+}
+
+.map-empty {
+  color: var(--ref-gold-2);
+}
+
+.map-empty::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(231, 203, 146, 0.16),
+    rgba(231, 203, 146, 0.05) 42%,
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+.map-empty__mark {
+  color: var(--ref-gold-2);
+  filter: drop-shadow(0 0 16px rgba(231, 203, 146, 0.45));
+}
+
+.map-empty__text {
+  color: color-mix(in srgb, var(--ref-gold-2) 78%, #a88f62);
+  font-family: var(--font-title);
+  letter-spacing: 0.05em;
+}
+
+.map-zoom {
+  background: linear-gradient(180deg, #2c1b10, #120b06);
+  border-color: color-mix(in srgb, var(--ref-gold) 65%, #000);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 226, 170, 0.12),
+    0 0 0 2px rgba(9, 5, 2, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* ------------------------------------------------------- Мелочи */
+
+.badge--net,
+.badge--muted {
+  border-color: color-mix(in srgb, var(--ref-gold) 40%, #2a1a0e);
+}
+
+.topbar .btn--ghost,
+.col--right .btn--ghost {
+  background: linear-gradient(180deg, rgba(58, 36, 22, 0.9), rgba(20, 12, 7, 0.95));
+  border-color: color-mix(in srgb, var(--ref-gold) 38%, #2a1a0e);
+  color: var(--ref-gold-2);
+}
+
+.topbar .btn--ghost:hover:not(:disabled),
+.col--right .btn--ghost:hover:not(:disabled) {
+  border-color: var(--ref-gold);
+  color: #fff0cf;
+}

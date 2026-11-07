@@ -23,7 +23,7 @@
   const PERF_KEY = 'dnd-table.perf';
   /** Разрешённые масштабы: ступени выбраны так, чтобы интерфейс не разъезжался. */
   const SCALES = [0.9, 1, 1.15, 1.3];
-  const DEFAULT_THEME = 'standart';
+  const DEFAULT_THEME = 'traktir';
   const DEFAULT_TONE = 'dark';
 
   /**
