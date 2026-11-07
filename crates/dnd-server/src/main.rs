@@ -3,6 +3,7 @@
 //! Phase 1 is a protocol spike: serve the existing renderer and answer `ping`.
 //! Parity with `E:\DnD\server\socket.js` is checked by `tools/parity.js`.
 
+mod auth;
 mod net;
 
 use axum::Router;

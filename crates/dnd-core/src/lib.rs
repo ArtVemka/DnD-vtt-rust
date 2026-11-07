@@ -9,6 +9,7 @@
 //! later where the server needs structure.
 
 pub mod campaign;
+pub mod content;
 pub mod dice;
 pub mod media;
 pub mod model;
