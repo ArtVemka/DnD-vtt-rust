@@ -23,9 +23,21 @@ use tauri::{Manager, State, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::watch;
 
 /// Data lives where the Electron version kept it, so existing campaigns open.
+fn portable_data_dir() -> Option<PathBuf> {
+    if let Ok(dir) = std::env::var("PORTABLE_EXECUTABLE_DIR") {
+        return Some(PathBuf::from(dir).join("data"));
+    }
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+    dir.join("portable.txt").exists().then(|| dir.join("data"))
+}
+
 fn default_data_dir() -> PathBuf {
     if let Ok(dir) = std::env::var("DND_DATA") {
         return PathBuf::from(dir);
+    }
+    if let Some(dir) = portable_data_dir() {
+        return dir;
     }
     match std::env::var_os("APPDATA") {
         Some(dir) => PathBuf::from(dir).join("dnd-table"),
@@ -45,6 +57,7 @@ struct Host {
 struct AppState {
     data_dir: PathBuf,
     campaigns_dir: PathBuf,
+    portable: bool,
     current: Mutex<Option<Value>>,
     host: Mutex<Option<Host>>,
     autosave_seconds: Arc<AtomicU64>,
@@ -53,9 +66,11 @@ struct AppState {
 impl AppState {
     fn new() -> Self {
         let data_dir = default_data_dir();
+        let portable = std::env::var("DND_DATA").is_err() && portable_data_dir().is_some();
         Self {
             campaigns_dir: data_dir.join("campaigns"),
             data_dir,
+            portable,
             current: Mutex::new(None),
             host: Mutex::new(None),
             autosave_seconds: Arc::new(AtomicU64::new(60)),
@@ -157,7 +172,7 @@ fn app_config(state: State<'_, AppState>) -> Value {
         "versionLabel": env!("CARGO_PKG_VERSION"),
         "dataDir": state.data_dir.to_string_lossy(),
         "campaignsDir": state.campaigns_dir.to_string_lossy(),
-        "portable": false,
+        "portable": state.portable,
         "platform": "win32",
         "canUpdate": false,
         "isElectron": true

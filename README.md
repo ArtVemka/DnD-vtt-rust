@@ -47,6 +47,17 @@ npx @tauri-apps/cli@2 build           # MSI и NSIS в target\release\bundle
 «Выход». Автосохранение по умолчанию раз в минуту, интервал меняется в
 настройках.
 
+### Портативная сборка
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/portable.ps1
+```
+
+Собирает `dist\dnd-table-portable\` и `dist\DnD-Table-portable.zip`: exe,
+`renderer\` и `portable.txt`. Запускать `DnD Table.exe` из папки, установка не
+нужна. Кампании, копии и файлы лежат в `data\` рядом с exe, профиль Windows не
+трогается. `DND_DATA` по-прежнему переопределяет папку.
+
 ## Команды
 
 ```powershell

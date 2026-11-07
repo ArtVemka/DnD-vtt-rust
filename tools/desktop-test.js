@@ -11,6 +11,7 @@ const { io } = require('E:/DnD/node_modules/socket.io-client');
 
 const EXE = process.env.DND_DESKTOP_EXE || path.resolve(__dirname, '..', 'target', 'debug', 'dnd-desktop.exe');
 const DEBUG_PORT = 9222;
+const portable = process.env.DND_TEST_PORTABLE === '1';
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dnd-desktop-test-'));
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,14 +70,17 @@ async function evaluate(cdp, expression) {
   return result.result.value;
 }
 
-function join(url, payload) {
+function join(url, payload, prepare) {
   return new Promise((resolve, reject) => {
     const socket = io(url, { transports: ['websocket'], reconnection: false, timeout: 8000 });
     const timer = setTimeout(() => reject(new Error('join timeout')), 10000);
-    socket.on('connect', () => socket.emit('joinRoom', payload, (ack) => {
-      clearTimeout(timer);
-      resolve({ socket, ack });
-    }));
+    socket.on('connect', () => {
+      if (prepare) prepare(socket);
+      socket.emit('joinRoom', payload, (ack) => {
+        clearTimeout(timer);
+        resolve({ socket, ack });
+      });
+    });
     socket.on('connect_error', (error) => {
       clearTimeout(timer);
       reject(error);
@@ -85,14 +89,18 @@ function join(url, payload) {
 }
 
 (async () => {
-  const app = spawn(EXE, [], {
-    env: {
-      ...process.env,
-      DND_DATA: dataDir,
-      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${DEBUG_PORT}`
-    },
-    stdio: 'ignore'
-  });
+  const env = {
+    ...process.env,
+    WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${DEBUG_PORT}`
+  };
+  if (portable) {
+    delete env.DND_DATA;
+    fs.rmSync(path.join(path.dirname(EXE), 'data'), { recursive: true, force: true });
+  } else {
+    env.DND_DATA = dataDir;
+  }
+
+  const app = spawn(EXE, [], { env, stdio: 'ignore' });
 
   let cdp;
   const sockets = [];
@@ -115,10 +123,17 @@ function join(url, payload) {
       return { config, created, started };
     })()`);
 
-    if (!boot.config || !boot.config.dataDir.includes('dnd-desktop-test-')) {
+    if (portable) {
+      const expected = path.resolve(path.dirname(EXE), 'data');
+      if (path.resolve(boot.config.dataDir) !== expected) {
+        throw new Error(`portable data dir mismatch: ${boot.config.dataDir} != ${expected}`);
+      }
+      if (!boot.config.portable) throw new Error('config.portable is false');
+      console.log('PASS portable data dir next to exe');
+    } else if (!boot.config || !boot.config.dataDir.includes('dnd-desktop-test-')) {
       throw new Error(`data dir mismatch: ${boot.config && boot.config.dataDir}`);
     }
-    console.log('PASS bridge getConfig data dir');
+    if (!portable) console.log('PASS bridge getConfig data dir');
     if (!boot.created.ok) throw new Error(`create failed: ${boot.created.error}`);
     console.log('PASS create campaign in webview');
     if (!boot.started.ok) throw new Error(`start failed: ${boot.started.error}`);
@@ -136,23 +151,33 @@ function join(url, payload) {
     sockets.push(dm.socket);
     if (!dm.ack.ok || dm.ack.you.role !== 'dm') throw new Error('dm join failed');
 
-    let updates = 0;
+    let dmUpdates = 0;
+    let playerUpdates = 0;
+    let check = () => {};
     const updatesSeen = new Promise((resolve) => {
+      check = () => {
+        if (dmUpdates > 0 && playerUpdates > 0) resolve(true);
+      };
       dm.socket.on('playersUpdate', () => {
-        updates += 1;
-        if (updates === 2) resolve(updates);
+        dmUpdates += 1;
+        check();
       });
-      setTimeout(() => resolve(updates), 4000);
+      setTimeout(() => resolve(false), 4000);
     });
 
-    const player = await join(url, { name: 'Игрок' });
+    const player = await join(url, { name: 'Игрок' }, (socket) => {
+      socket.on('playersUpdate', () => {
+        playerUpdates += 1;
+        check();
+      });
+    });
     sockets.push(player.socket);
     if (!player.ack.ok || player.ack.you.role !== 'player') throw new Error('player join failed');
     console.log(`PASS joins: dm=${dm.ack.you.playerId} player=${player.ack.you.playerId}`);
 
     const received = await updatesSeen;
-    if (received < 2) throw new Error(`expected 2 playersUpdate, got ${received}`);
-    console.log('PASS playersUpdate reaches DM');
+    if (!received) throw new Error(`playersUpdate: dm=${dmUpdates} player=${playerUpdates}`);
+    console.log(`PASS playersUpdate: dm=${dmUpdates} player=${playerUpdates}`);
 
     const stopped = await evaluate(cdp, `(async () => {
       const stop = await desktop.stopHost();
@@ -174,6 +199,9 @@ function join(url, payload) {
     app.kill();
     await sleep(300);
     fs.rmSync(dataDir, { recursive: true, force: true });
+    if (portable) {
+      fs.rmSync(path.join(path.dirname(EXE), 'data'), { recursive: true, force: true });
+    }
   }
 })().catch((error) => {
   console.error('FAIL', error.message);
