@@ -59,7 +59,10 @@ fn lower(value: Option<&Value>) -> String {
 }
 
 fn lower_str(text: &str) -> String {
-    text.to_lowercase().chars().filter(|ch| ch.is_ascii_lowercase()).collect()
+    text.to_lowercase()
+        .chars()
+        .filter(|ch| ch.is_ascii_lowercase())
+        .collect()
 }
 
 /// Приводит текст поля к строке с переносами строк.
@@ -105,7 +108,10 @@ fn strip_tags(html: &str) -> String {
             index += 1;
             continue;
         }
-        let ch = html[index..].chars().next().expect("index is a char boundary");
+        let ch = html[index..]
+            .chars()
+            .next()
+            .expect("index is a char boundary");
         out.push(ch);
         index += ch.len_utf8();
     }
@@ -117,11 +123,16 @@ fn strip_tags(html: &str) -> String {
 fn match_tag(text: &str) -> Option<(usize, &'static str)> {
     let bytes = text.as_bytes();
     let is_ci = |index: usize, expected: u8| {
-        bytes.get(index).is_some_and(|byte| byte.eq_ignore_ascii_case(&expected))
+        bytes
+            .get(index)
+            .is_some_and(|byte| byte.eq_ignore_ascii_case(&expected))
     };
     if is_ci(1, b'b') && is_ci(2, b'r') {
         let mut index = 3;
-        while bytes.get(index).is_some_and(|byte| byte.is_ascii_whitespace()) {
+        while bytes
+            .get(index)
+            .is_some_and(|byte| byte.is_ascii_whitespace())
+        {
             index += 1;
         }
         if bytes.get(index) == Some(&b'/') {
@@ -210,7 +221,11 @@ fn journal_text(doc: &Value) -> String {
                 if body.is_empty() {
                     return None;
                 }
-                Some(if title.is_empty() { body } else { format!("{title}\n{body}") })
+                Some(if title.is_empty() {
+                    body
+                } else {
+                    format!("{title}\n{body}")
+                })
             })
             .collect();
         if !chunks.is_empty() {
@@ -302,7 +317,11 @@ fn scene_tokens(doc: &Value, resolve_asset: Option<&dyn Fn(&str) -> String>) -> 
                         .or_else(|| js::get(token, "id").filter(|value| js::truthy(value))),
                     "",
                 );
-                if explicit.is_empty() { name.clone() } else { explicit }
+                if explicit.is_empty() {
+                    name.clone()
+                } else {
+                    explicit
+                }
             };
             let width = js::number_to_value(js::number_or_zero(js::get(token, "width")));
             let height = js::number_to_value(js::number_or_zero(js::get(token, "height")));
@@ -332,7 +351,8 @@ fn stat_number(value: Option<&Value>) -> f64 {
 /// версиях, поэтому читаем оба известных вида и молча пропускаем остальное:
 /// лучше показать меньше, чем уронить импорт.
 fn actor_statblock(doc: &Value) -> Option<Value> {
-    if !js::get(doc, "system").is_some_and(js::truthy) && !js::get(doc, "data").is_some_and(js::truthy)
+    if !js::get(doc, "system").is_some_and(js::truthy)
+        && !js::get(doc, "data").is_some_and(js::truthy)
     {
         return None;
     }
@@ -392,10 +412,15 @@ fn actor_statblock(doc: &Value) -> Option<Value> {
     for key in ["str", "dex", "con", "int", "wis", "cha"] {
         let entry = js::get(&abilities_raw, key);
         let value = match entry {
-            Some(entry) if matches!(entry, Value::Object(_)) => stat_number(js::get(entry, "value")),
+            Some(entry) if matches!(entry, Value::Object(_)) => {
+                stat_number(js::get(entry, "value"))
+            }
             entry => stat_number(entry),
         };
-        abilities.insert(key.to_string(), js::number_to_value(if value > 0.0 { value } else { 10.0 }));
+        abilities.insert(
+            key.to_string(),
+            js::number_to_value(if value > 0.0 { value } else { 10.0 }),
+        );
     }
 
     let cr = js::get(&system, "details")
@@ -435,7 +460,11 @@ pub fn describe_document(
         name
     };
     let empty = json!({});
-    let raw = if matches!(doc, Value::Object(_)) { doc } else { &empty };
+    let raw = if matches!(doc, Value::Object(_)) {
+        doc
+    } else {
+        &empty
+    };
     // Неизвестный тип не превращаем молча в предмет: такой документ попадёт
     // в отчёт как пропущенный, и ДМ увидит, что содержимое осталось за бортом.
     let kind = doc_type(&type_name).unwrap_or("unknown");
@@ -470,8 +499,14 @@ pub fn describe_document(
 
     let mut raw_map = Map::new();
     raw_map.insert("text".to_string(), Value::String(text));
-    raw_map.insert("type".to_string(), Value::String(js::string_or(js::get(raw, "type"), "")));
-    raw_map.insert("formula".to_string(), Value::String(js::string_or(js::get(raw, "formula"), "")));
+    raw_map.insert(
+        "type".to_string(),
+        Value::String(js::string_or(js::get(raw, "type"), "")),
+    );
+    raw_map.insert(
+        "formula".to_string(),
+        Value::String(js::string_or(js::get(raw, "formula"), "")),
+    );
     raw_map.insert(
         "sceneWidth".to_string(),
         js::number_to_value(js::number_or_zero(js::get(raw, "width"))),
@@ -489,10 +524,16 @@ pub fn describe_document(
                 .iter()
                 .map(|wall| {
                     let coordinates = match js::get(wall, "c") {
-                        Some(Value::Array(parts)) => {
-                            parts.iter().map(|part| js::number_to_value(js::number(part))).collect()
-                        }
-                        _ => vec![Value::from(0), Value::from(0), Value::from(0), Value::from(0)],
+                        Some(Value::Array(parts)) => parts
+                            .iter()
+                            .map(|part| js::number_to_value(js::number(part)))
+                            .collect(),
+                        _ => vec![
+                            Value::from(0),
+                            Value::from(0),
+                            Value::from(0),
+                            Value::from(0),
+                        ],
                     };
                     json!({
                         "c": coordinates,
@@ -523,7 +564,10 @@ pub fn describe_document(
 }
 
 /// Разворачивает содержимое Adventure: внутри лежат ссылки на сцены и акты.
-pub fn describe_adventure(doc: &Value, resolve_asset: Option<&dyn Fn(&str) -> String>) -> Vec<Value> {
+pub fn describe_adventure(
+    doc: &Value,
+    resolve_asset: Option<&dyn Fn(&str) -> String>,
+) -> Vec<Value> {
     let mut out = Vec::new();
     let mut push = |entry: &Value, kind: &str| {
         if !js::truthy(entry) {
@@ -539,7 +583,11 @@ pub fn describe_adventure(doc: &Value, resolve_asset: Option<&dyn Fn(&str) -> St
             _ => Map::new(),
         };
         item.insert("type".to_string(), Value::String(kind.to_string()));
-        out.push(describe_document(&Value::Object(item), Some(kind), resolve_asset));
+        out.push(describe_document(
+            &Value::Object(item),
+            Some(kind),
+            resolve_asset,
+        ));
     };
 
     for (key, kind) in [
@@ -560,7 +608,9 @@ pub fn describe_adventure(doc: &Value, resolve_asset: Option<&dyn Fn(&str) -> St
         // Adventure может лежать одним файлом с вложенными документами.
         for key in ["scenes", "actors", "items", "journal", "rollTables"] {
             for entry in js::as_array(js::get(doc, key)) {
-                if matches!(entry, Value::Object(_)) && js::get(entry, "type").is_some_and(js::truthy) {
+                if matches!(entry, Value::Object(_))
+                    && js::get(entry, "type").is_some_and(js::truthy)
+                {
                     out.push(describe_document(entry, None, resolve_asset));
                 }
             }
@@ -577,9 +627,7 @@ pub fn describe_adventure(doc: &Value, resolve_asset: Option<&dyn Fn(&str) -> St
 /// Прямо в zip он может оказаться с любым числом ведущих папок, поэтому ищем не
 /// по точному совпадению, а по тому, чем заканчивается путь: это спасает и
 /// `assets/x.webp`, и `adventure/assets/x.webp`.
-fn make_asset_resolver<'a>(
-    assets: &'a [(String, Vec<u8>)],
-) -> Box<dyn Fn(&str) -> String + 'a> {
+fn make_asset_resolver<'a>(assets: &'a [(String, Vec<u8>)]) -> Box<dyn Fn(&str) -> String + 'a> {
     if assets.is_empty() {
         return Box::new(|_| String::new());
     }
@@ -651,7 +699,10 @@ fn extension_of(path: &str) -> &'static str {
 pub fn from_json_buffer(buffer: &[u8]) -> Result<Extracted, ImportError> {
     let text = String::from_utf8_lossy(buffer);
     let doc: Value = serde_json::from_str(&text).map_err(|error| {
-        import_error(E_UNREADABLE, format!("Файл не похож на корректный JSON: {error}"))
+        import_error(
+            E_UNREADABLE,
+            format!("Файл не похож на корректный JSON: {error}"),
+        )
     })?;
     let list: Vec<&Value> = match &doc {
         Value::Array(items) => items.iter().collect(),
@@ -685,11 +736,16 @@ pub fn from_json_buffer(buffer: &[u8]) -> Result<Extracted, ImportError> {
     };
     let source_id = js::string_or(first.and_then(|doc| js::get(doc, "_id")), "json");
     let source_title = js::string_or(first.and_then(|doc| js::get(doc, "name")), "Файл Foundry");
-    Ok(Extracted { source_id, source_title, entities })
+    Ok(Extracted {
+        source_id,
+        source_title,
+        entities,
+    })
 }
 
 pub fn from_zip_buffer(buffer: &[u8]) -> Result<Extracted, ImportError> {
-    let contents = read_zip_json_and_assets(buffer).map_err(|error| import_error(E_UNREADABLE, error))?;
+    let contents =
+        read_zip_json_and_assets(buffer).map_err(|error| import_error(E_UNREADABLE, error))?;
     // Картинки лежат рядом с json, а не внутри него: без них сцены приедут
     // пустыми, потому что фон — это отдельный файл в выгрузке.
     let resolver = make_asset_resolver(&contents.assets);
@@ -697,13 +753,16 @@ pub fn from_zip_buffer(buffer: &[u8]) -> Result<Extracted, ImportError> {
     let mut entities = Vec::new();
     let mut title = "Модуль Foundry".to_string();
 
-    let manifest = contents.files.iter().find(|(name, _)| name == "module.json");
+    let manifest = contents
+        .files
+        .iter()
+        .find(|(name, _)| name == "module.json");
     if let Some((_, data)) = manifest {
         if let Ok(parsed) = serde_json::from_str::<Value>(&String::from_utf8_lossy(data)) {
             title = js::string_or(
-                js::get(&parsed, "title").filter(|value| js::truthy(value)).or_else(|| {
-                    js::get(&parsed, "name").filter(|value| js::truthy(value))
-                }),
+                js::get(&parsed, "title")
+                    .filter(|value| js::truthy(value))
+                    .or_else(|| js::get(&parsed, "name").filter(|value| js::truthy(value))),
                 &title,
             );
         }
@@ -729,7 +788,9 @@ pub fn from_zip_buffer(buffer: &[u8]) -> Result<Extracted, ImportError> {
             if is_adventure {
                 // Если манифеста нет, показываем имя самого приключения, а не служебную заглушку.
                 if manifest.is_none() {
-                    if let Some(Value::String(name)) = js::get(entry, "name").filter(|value| js::truthy(value)) {
+                    if let Some(Value::String(name)) =
+                        js::get(entry, "name").filter(|value| js::truthy(value))
+                    {
                         title = name.clone();
                     }
                 }

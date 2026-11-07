@@ -149,24 +149,96 @@ pub struct Skill {
 
 /// 18 навыков D&D 5e 2014 и их базовая характеристика.
 pub const SKILLS: [Skill; 18] = [
-    Skill { key: "acrobatics", label: "Акробатика", ability: "dex" },
-    Skill { key: "animalHandling", label: "Уход за животными", ability: "wis" },
-    Skill { key: "arcana", label: "Магия", ability: "int" },
-    Skill { key: "athletics", label: "Атлетика", ability: "str" },
-    Skill { key: "deception", label: "Обман", ability: "cha" },
-    Skill { key: "history", label: "История", ability: "int" },
-    Skill { key: "insight", label: "Проницательность", ability: "wis" },
-    Skill { key: "intimidation", label: "Запугивание", ability: "cha" },
-    Skill { key: "investigation", label: "Анализ", ability: "int" },
-    Skill { key: "medicine", label: "Медицина", ability: "wis" },
-    Skill { key: "nature", label: "Природа", ability: "int" },
-    Skill { key: "perception", label: "Внимательность", ability: "wis" },
-    Skill { key: "performance", label: "Выступление", ability: "cha" },
-    Skill { key: "persuasion", label: "Убеждение", ability: "cha" },
-    Skill { key: "religion", label: "Религия", ability: "int" },
-    Skill { key: "sleightOfHand", label: "Ловкость рук", ability: "dex" },
-    Skill { key: "stealth", label: "Скрытность", ability: "dex" },
-    Skill { key: "survival", label: "Выживание", ability: "wis" },
+    Skill {
+        key: "acrobatics",
+        label: "Акробатика",
+        ability: "dex",
+    },
+    Skill {
+        key: "animalHandling",
+        label: "Уход за животными",
+        ability: "wis",
+    },
+    Skill {
+        key: "arcana",
+        label: "Магия",
+        ability: "int",
+    },
+    Skill {
+        key: "athletics",
+        label: "Атлетика",
+        ability: "str",
+    },
+    Skill {
+        key: "deception",
+        label: "Обман",
+        ability: "cha",
+    },
+    Skill {
+        key: "history",
+        label: "История",
+        ability: "int",
+    },
+    Skill {
+        key: "insight",
+        label: "Проницательность",
+        ability: "wis",
+    },
+    Skill {
+        key: "intimidation",
+        label: "Запугивание",
+        ability: "cha",
+    },
+    Skill {
+        key: "investigation",
+        label: "Анализ",
+        ability: "int",
+    },
+    Skill {
+        key: "medicine",
+        label: "Медицина",
+        ability: "wis",
+    },
+    Skill {
+        key: "nature",
+        label: "Природа",
+        ability: "int",
+    },
+    Skill {
+        key: "perception",
+        label: "Внимательность",
+        ability: "wis",
+    },
+    Skill {
+        key: "performance",
+        label: "Выступление",
+        ability: "cha",
+    },
+    Skill {
+        key: "persuasion",
+        label: "Убеждение",
+        ability: "cha",
+    },
+    Skill {
+        key: "religion",
+        label: "Религия",
+        ability: "int",
+    },
+    Skill {
+        key: "sleightOfHand",
+        label: "Ловкость рук",
+        ability: "dex",
+    },
+    Skill {
+        key: "stealth",
+        label: "Скрытность",
+        ability: "dex",
+    },
+    Skill {
+        key: "survival",
+        label: "Выживание",
+        ability: "wis",
+    },
 ];
 
 /// `SPELL_SLOT_LEVELS` из `renderer/dnd5e.js`: девять ступеней.
@@ -402,7 +474,9 @@ fn js_truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(flag) => *flag,
-        Value::Number(number) => number.as_f64().is_some_and(|num| num != 0.0 && !num.is_nan()),
+        Value::Number(number) => number
+            .as_f64()
+            .is_some_and(|num| num != 0.0 && !num.is_nan()),
         Value::String(text) => !text.is_empty(),
         _ => true,
     }
@@ -517,7 +591,11 @@ fn truncate_utf16(text: &str, max_length: i64) -> String {
 }
 
 fn or_default(text: String, fallback: &str) -> String {
-    if text.is_empty() { fallback.to_string() } else { text }
+    if text.is_empty() {
+        fallback.to_string()
+    } else {
+        text
+    }
 }
 
 fn is_objectish(value: &Value) -> bool {
@@ -547,22 +625,63 @@ fn coins_from(input: &Value) -> Coins {
 }
 
 pub fn normalize_coins(input: &Value) -> Value {
-    let source = if is_objectish(input) { input } else { &Value::Null };
+    let source = if is_objectish(input) {
+        input
+    } else {
+        &Value::Null
+    };
     to_value(coins_from(source))
 }
 
 fn default_abilities() -> Abilities {
-    Abilities { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 }
+    Abilities {
+        str: 10,
+        dex: 10,
+        con: 10,
+        int: 10,
+        wis: 10,
+        cha: 10,
+    }
 }
 
 fn abilities_from(input: Option<&Value>) -> Abilities {
     Abilities {
-        str: clamp_int_or(field_opt(input, "str"), LIMITS.min_ability, LIMITS.max_ability, 10),
-        dex: clamp_int_or(field_opt(input, "dex"), LIMITS.min_ability, LIMITS.max_ability, 10),
-        con: clamp_int_or(field_opt(input, "con"), LIMITS.min_ability, LIMITS.max_ability, 10),
-        int: clamp_int_or(field_opt(input, "int"), LIMITS.min_ability, LIMITS.max_ability, 10),
-        wis: clamp_int_or(field_opt(input, "wis"), LIMITS.min_ability, LIMITS.max_ability, 10),
-        cha: clamp_int_or(field_opt(input, "cha"), LIMITS.min_ability, LIMITS.max_ability, 10),
+        str: clamp_int_or(
+            field_opt(input, "str"),
+            LIMITS.min_ability,
+            LIMITS.max_ability,
+            10,
+        ),
+        dex: clamp_int_or(
+            field_opt(input, "dex"),
+            LIMITS.min_ability,
+            LIMITS.max_ability,
+            10,
+        ),
+        con: clamp_int_or(
+            field_opt(input, "con"),
+            LIMITS.min_ability,
+            LIMITS.max_ability,
+            10,
+        ),
+        int: clamp_int_or(
+            field_opt(input, "int"),
+            LIMITS.min_ability,
+            LIMITS.max_ability,
+            10,
+        ),
+        wis: clamp_int_or(
+            field_opt(input, "wis"),
+            LIMITS.min_ability,
+            LIMITS.max_ability,
+            10,
+        ),
+        cha: clamp_int_or(
+            field_opt(input, "cha"),
+            LIMITS.min_ability,
+            LIMITS.max_ability,
+            10,
+        ),
     }
 }
 
@@ -660,7 +779,11 @@ fn attacks_from(value: &Value) -> Vec<Attack> {
         if name.is_empty() && damage.is_empty() && bonus == 0 {
             continue;
         }
-        result.push(Attack { name, bonus, damage });
+        result.push(Attack {
+            name,
+            bonus,
+            damage,
+        });
     }
     result
 }
@@ -843,7 +966,9 @@ pub fn normalize_statblock(input: &Value) -> Value {
 }
 
 fn crop_from(input: Option<&Value>) -> ImageCrop {
-    let source = input.filter(|value| is_objectish(value)).unwrap_or(&Value::Null);
+    let source = input
+        .filter(|value| is_objectish(value))
+        .unwrap_or(&Value::Null);
     let zoom = clamp_number_or(field(source, "imageZoom"), 1.0, 4.0, 1.0);
     let limit = (zoom - 1.0) * 50.0;
     ImageCrop {
@@ -1095,7 +1220,10 @@ mod tests {
         assert_eq!(sheet["level"], json!(1));
         assert_eq!(sheet["experience"], json!(0));
         assert_eq!(sheet["proficiencyBonusManual"], Value::Null);
-        assert_eq!(sheet["abilities"], json!({"str":10,"dex":10,"con":10,"int":10,"wis":10,"cha":10}));
+        assert_eq!(
+            sheet["abilities"],
+            json!({"str":10,"dex":10,"con":10,"int":10,"wis":10,"cha":10})
+        );
         assert_eq!(sheet["coins"], json!({"cp":0,"sp":0,"ep":0,"gp":0,"pp":0}));
         assert_eq!(sheet["hitDice"], json!("1d8"));
         assert_eq!(sheet["armorClass"], json!(10));
@@ -1108,7 +1236,16 @@ mod tests {
 
     #[test]
     fn empty_maps_and_coins() {
-        assert_eq!(empty_coins(), Coins { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 });
+        assert_eq!(
+            empty_coins(),
+            Coins {
+                cp: 0,
+                sp: 0,
+                ep: 0,
+                gp: 0,
+                pp: 0
+            }
+        );
         let map = empty_proficiency_map(&ABILITY_KEYS);
         assert_eq!(map.len(), 6);
         assert!(map.values().all(|value| !*value));
@@ -1163,10 +1300,19 @@ mod tests {
 
     #[test]
     fn level_and_experience_clamps() {
-        assert_eq!(normalize_sheet(&json!({"level": 99}), "")["level"], json!(20));
+        assert_eq!(
+            normalize_sheet(&json!({"level": 99}), "")["level"],
+            json!(20)
+        );
         assert_eq!(normalize_sheet(&json!({"level": 0}), "")["level"], json!(1));
-        assert_eq!(normalize_sheet(&json!({"level": "abc"}), "")["level"], json!(1));
-        assert_eq!(normalize_sheet(&json!({"level": 25.6}), "")["level"], json!(20));
+        assert_eq!(
+            normalize_sheet(&json!({"level": "abc"}), "")["level"],
+            json!(1)
+        );
+        assert_eq!(
+            normalize_sheet(&json!({"level": 25.6}), "")["level"],
+            json!(20)
+        );
         assert_eq!(
             normalize_sheet(&json!({"experience": 1e9}), "")["experience"],
             json!(9999999)
@@ -1179,13 +1325,17 @@ mod tests {
 
     #[test]
     fn coin_clamps() {
-        let coins = normalize_coins(&json!({"cp": -5, "sp": "7", "ep": 1e9, "gp": "abc", "pp": null}));
+        let coins =
+            normalize_coins(&json!({"cp": -5, "sp": "7", "ep": 1e9, "gp": "abc", "pp": null}));
         assert_eq!(coins["cp"], json!(0));
         assert_eq!(coins["sp"], json!(7));
         assert_eq!(coins["ep"], json!(999999));
         assert_eq!(coins["gp"], json!(0));
         assert_eq!(coins["pp"], json!(0));
-        assert_eq!(normalize_coins(&json!("junk")), json!({"cp":0,"sp":0,"ep":0,"gp":0,"pp":0}));
+        assert_eq!(
+            normalize_coins(&json!("junk")),
+            json!({"cp":0,"sp":0,"ep":0,"gp":0,"pp":0})
+        );
     }
 
     #[test]
@@ -1284,7 +1434,9 @@ mod tests {
         assert_eq!(attacks[2]["name"].as_str().unwrap().chars().count(), 60);
         assert_eq!(attacks[2]["damage"].as_str().unwrap().chars().count(), 80);
 
-        let many: Vec<Value> = (0..25).map(|index| json!({"name": format!("a{index}")})).collect();
+        let many: Vec<Value> = (0..25)
+            .map(|index| json!({"name": format!("a{index}")}))
+            .collect();
         let list = normalize_attack_list(&Value::Array(many));
         assert_eq!(list.as_array().unwrap().len(), 20);
         assert_eq!(normalize_attack_list(&json!({})), json!([]));
@@ -1321,10 +1473,7 @@ mod tests {
             {"name": "Монах", "level": 1},
             {"name": "Паладин", "level": 1}
         ]));
-        assert_eq!(
-            classes,
-            json!([{"name": "Воин", "level": 20}])
-        );
+        assert_eq!(classes, json!([{"name": "Воин", "level": 20}]));
 
         let six = normalize_sheet_classes(&json!([
             {"name": "a", "level": 3},
@@ -1362,13 +1511,28 @@ mod tests {
 
     #[test]
     fn adventure_image_accepts_files_and_http_only() {
-        assert_eq!(normalize_adventure_image(&json!("/files/goblin.png")), "/files/goblin.png");
-        assert_eq!(normalize_adventure_image(&json!("  /files/a-b_c.1.png  ")), "/files/a-b_c.1.png");
+        assert_eq!(
+            normalize_adventure_image(&json!("/files/goblin.png")),
+            "/files/goblin.png"
+        );
+        assert_eq!(
+            normalize_adventure_image(&json!("  /files/a-b_c.1.png  ")),
+            "/files/a-b_c.1.png"
+        );
         assert_eq!(normalize_adventure_image(&json!("/files/")), "");
         assert_eq!(normalize_adventure_image(&json!("/files/a/b.png")), "");
-        assert_eq!(normalize_adventure_image(&json!("https://example.com/x.png")), "https://example.com/x.png");
-        assert_eq!(normalize_adventure_image(&json!("HTTPS://example.com")), "HTTPS://example.com");
-        assert_eq!(normalize_adventure_image(&json!("https://exa mple.com")), "");
+        assert_eq!(
+            normalize_adventure_image(&json!("https://example.com/x.png")),
+            "https://example.com/x.png"
+        );
+        assert_eq!(
+            normalize_adventure_image(&json!("HTTPS://example.com")),
+            "HTTPS://example.com"
+        );
+        assert_eq!(
+            normalize_adventure_image(&json!("https://exa mple.com")),
+            ""
+        );
         assert_eq!(normalize_adventure_image(&json!("javascript:alert(1)")), "");
         assert_eq!(normalize_adventure_image(&json!(42)), "");
         assert_eq!(
@@ -1461,7 +1625,9 @@ mod tests {
 
     #[test]
     fn adventure_list_limits_are_applied() {
-        let notes: Vec<Value> = (0..400).map(|index| json!({"title": format!("n{index}")})).collect();
+        let notes: Vec<Value> = (0..400)
+            .map(|index| json!({"title": format!("n{index}")}))
+            .collect();
         let adventure = normalize_adventure(&json!({"notes": notes, "items": "nope"}));
         assert_eq!(adventure["notes"].as_array().unwrap().len(), 300);
         assert_eq!(adventure["items"], json!([]));

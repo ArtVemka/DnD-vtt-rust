@@ -13,7 +13,7 @@ use std::sync::{Arc, Once};
 use serde_json::Value;
 
 pub use core::pipeline::Input;
-use core::pipeline::{register, run_import as pipeline_run_import, inspect as pipeline_inspect};
+use core::pipeline::{inspect as pipeline_inspect, register, run_import as pipeline_run_import};
 use errors::ImportError;
 
 static REGISTER_FOUNDRY: Once = Once::new();
@@ -31,7 +31,11 @@ pub fn inspect(input: &Input<'_>, context: &Value) -> Result<Value, ImportError>
 }
 
 /// Импортирует выбранное.
-pub fn run_import(input: &Input<'_>, options: &Value, context: &Value) -> Result<Value, ImportError> {
+pub fn run_import(
+    input: &Input<'_>,
+    options: &Value,
+    context: &Value,
+) -> Result<Value, ImportError> {
     ensure_foundry();
     pipeline_run_import(input, options, context)
 }

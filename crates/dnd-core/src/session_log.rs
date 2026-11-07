@@ -39,7 +39,10 @@ impl SessionLog {
     pub fn append(&mut self, event: &Value) {
         let file = self.current_file();
         let rotated = PathBuf::from(format!("{}.1", file.display()));
-        if fs::metadata(&file).map(|meta| meta.len() > MAX_LOG_BYTES).unwrap_or(false) {
+        if fs::metadata(&file)
+            .map(|meta| meta.len() > MAX_LOG_BYTES)
+            .unwrap_or(false)
+        {
             let _ = fs::remove_file(&rotated);
             let _ = fs::rename(&file, &rotated);
         }
@@ -101,7 +104,12 @@ pub fn export_session_markdown(dir: &Path) -> (String, String) {
                 continue;
             };
             let event = entry.get("event").and_then(Value::as_str).unwrap_or("");
-            if event == "chat" && entry.get("whisper").and_then(Value::as_bool).unwrap_or(false) {
+            if event == "chat"
+                && entry
+                    .get("whisper")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false)
+            {
                 continue;
             }
             let time = entry
@@ -117,7 +125,14 @@ pub fn export_session_markdown(dir: &Path) -> (String, String) {
                 }
                 "combat" => {
                     let on = entry.get("mode").and_then(Value::as_bool).unwrap_or(false);
-                    lines.push(format!("{time} Бой: {}", if on { "включён" } else { "выключен" }));
+                    lines.push(format!(
+                        "{time} Бой: {}",
+                        if on {
+                            "включён"
+                        } else {
+                            "выключен"
+                        }
+                    ));
                 }
                 _ => lines.push(format!("{time} {entry}")),
             }

@@ -4,17 +4,18 @@
 //! by `tools/` scripts against the exact renderer client.
 
 pub mod auth;
+pub mod handlers;
 pub mod net;
 pub mod table;
 
 use std::sync::Arc;
 
+use axum::Router;
 use axum::extract::{Path, State};
-use axum::http::{header, StatusCode};
+use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::Router;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 

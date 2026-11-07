@@ -1,7 +1,7 @@
 //! Connection helpers from `server/socket.js`: grid equality, loopback check,
 //! game-time arithmetic, constant-time secret compare, name sanitizing.
 
-use dnd_core::sheet::{sanitize_text, LIMITS};
+use dnd_core::sheet::{LIMITS, sanitize_text};
 use serde_json::Value;
 
 /// `sameGrid`: strict equality of the six grid fields.
@@ -9,9 +9,16 @@ pub fn same_grid(before: &Value, after: &Value) -> bool {
     if !before.is_object() || !after.is_object() {
         return false;
     }
-    ["enabled", "cell", "columns", "feetPerCell", "offsetX", "offsetY"]
-        .iter()
-        .all(|key| before.get(*key) == after.get(*key))
+    [
+        "enabled",
+        "cell",
+        "columns",
+        "feetPerCell",
+        "offsetX",
+        "offsetY",
+    ]
+    .iter()
+    .all(|key| before.get(*key) == after.get(*key))
 }
 
 /// `isLoopbackAddress`. Only literal loopback forms are accepted.
@@ -77,7 +84,10 @@ mod tests {
         let a = json!({"enabled": true, "cell": 46, "columns": 0});
         let b = json!({"enabled": true, "cell": 46, "columns": 0});
         assert!(same_grid(&a, &b));
-        assert!(!same_grid(&a, &json!({"enabled": true, "cell": 47, "columns": 0})));
+        assert!(!same_grid(
+            &a,
+            &json!({"enabled": true, "cell": 47, "columns": 0})
+        ));
         assert!(!same_grid(&a, &Value::Null));
     }
 

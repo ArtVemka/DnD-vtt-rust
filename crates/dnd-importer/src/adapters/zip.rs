@@ -26,8 +26,7 @@ pub struct ZipContents {
 }
 
 fn lower_ends_with(text: &str, suffix: &str) -> bool {
-    text.len() >= suffix.len()
-        && text[text.len() - suffix.len()..].eq_ignore_ascii_case(suffix)
+    text.len() >= suffix.len() && text[text.len() - suffix.len()..].eq_ignore_ascii_case(suffix)
 }
 
 fn is_json_entry(name: &str) -> bool {

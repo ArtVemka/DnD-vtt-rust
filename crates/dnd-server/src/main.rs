@@ -13,9 +13,9 @@ use std::time::Duration;
 
 use dnd_core::campaign::CampaignStore;
 use dnd_core::room::RoomState;
-use dnd_server::net;
-use dnd_server::table::{create_io, Table};
 use dnd_server::create_app;
+use dnd_server::net;
+use dnd_server::table::{Table, create_io};
 use serde_json::Value;
 
 #[tokio::main]
@@ -57,13 +57,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
     });
 
-    let table = Table::new(RoomState::new(campaign), host_key.clone(), Some(Arc::new(store)));
+    let table = Table::new(
+        RoomState::new(campaign),
+        host_key.clone(),
+        Some(Arc::new(store)),
+    );
     let (layer, _io) = create_io(table.clone());
 
     let static_dir = std::env::var("DND_RENDERER").unwrap_or_else(|_| "renderer".to_string());
     let app = create_app(table.clone(), &static_dir).layer(layer);
 
-    let port = match std::env::var("DND_PORT").ok().and_then(|value| value.parse::<u16>().ok()) {
+    let port = match std::env::var("DND_PORT")
+        .ok()
+        .and_then(|value| value.parse::<u16>().ok())
+    {
         Some(port) => port,
         None => net::find_free_port(32100, 64).await,
     };

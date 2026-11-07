@@ -129,7 +129,10 @@ fn is_supported_image_data_url(text: &str) -> bool {
     let Some((subtype, rest)) = rest.split_once(';') else {
         return false;
     };
-    if !matches!(subtype.to_ascii_lowercase().as_str(), "png" | "jpeg" | "jpg" | "webp") {
+    if !matches!(
+        subtype.to_ascii_lowercase().as_str(),
+        "png" | "jpeg" | "jpg" | "webp"
+    ) {
         return false;
     }
     let Some(body) = strip_prefix_ci(rest, "base64,") else {
@@ -145,11 +148,17 @@ fn is_supported_image_data_url(text: &str) -> bool {
 /// data URL, «data:img» из Foundry или голые base64.
 pub fn normalize_image(value: &Value) -> Result<Image, ImageError> {
     let Value::String(text) = value else {
-        return Err(ImageError { reason: "пусто".to_string(), path: String::new() });
+        return Err(ImageError {
+            reason: "пусто".to_string(),
+            path: String::new(),
+        });
     };
     let text = text.trim();
     if text.is_empty() {
-        return Err(ImageError { reason: "пусто".to_string(), path: String::new() });
+        return Err(ImageError {
+            reason: "пусто".to_string(),
+            path: String::new(),
+        });
     }
 
     // Foundry внутри слоёв и токенов пишет «data:img» без указания типа.
@@ -184,8 +193,13 @@ pub fn normalize_image(value: &Value) -> Result<Image, ImageError> {
             path: String::new(),
         });
     }
-    let decoded = decode_image(Some(&candidate), LIMITS.max_image_bytes as usize)
-        .map_err(|reason| ImageError { reason, path: String::new() })?;
+    let decoded =
+        decode_image(Some(&candidate), LIMITS.max_image_bytes as usize).map_err(|reason| {
+            ImageError {
+                reason,
+                path: String::new(),
+            }
+        })?;
     Ok(Image {
         data: candidate,
         mime: format!("image/{}", decoded.ext),
@@ -210,18 +224,18 @@ pub fn to_entity(raw: &Value) -> Entity {
     };
     let name = js::truncate_utf16(&js::string_or(js::get(raw, "name"), ""), 200);
     let tags = match js::get(raw, "tags") {
-        Some(Value::Array(items)) => {
-            items.iter().map(js::string).take(32).collect()
-        }
+        Some(Value::Array(items)) => items.iter().map(js::string).take(32).collect(),
         _ => Vec::new(),
     };
     let children = match js::get(raw, "children") {
         Some(Value::Array(items)) => items.iter().map(to_entity).collect(),
         _ => Vec::new(),
     };
-    let inner = js::get(raw, "raw").filter(|value| js::truthy(value)).and_then(|value| {
-        matches!(value, Value::Object(_) | Value::Array(_)).then(|| value.clone())
-    });
+    let inner = js::get(raw, "raw")
+        .filter(|value| js::truthy(value))
+        .and_then(|value| {
+            matches!(value, Value::Object(_) | Value::Array(_)).then(|| value.clone())
+        });
     Entity {
         kind,
         source_id: js::string_or(js::get(raw, "sourceId"), ""),
@@ -275,7 +289,11 @@ pub fn normalize(raw_entities: &[Value]) -> NormalizeResult {
         if let Value::Object(map) = &mut entity_raw {
             map.insert(
                 "sourceId".to_string(),
-                Value::String(if source_id.is_empty() { name.clone() } else { source_id }),
+                Value::String(if source_id.is_empty() {
+                    name.clone()
+                } else {
+                    source_id
+                }),
             );
             map.insert("name".to_string(), Value::String(name));
         }

@@ -7,7 +7,7 @@
 use std::cmp::Ordering;
 
 use serde::Serialize;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 pub use crate::model::MAP_TYPES;
 
@@ -62,7 +62,10 @@ fn js_parse_number(text: &str) -> f64 {
         _ => {}
     }
     let lower = text.to_ascii_lowercase();
-    if matches!(lower.as_str(), "inf" | "+inf" | "-inf" | "nan" | "+nan" | "-nan") {
+    if matches!(
+        lower.as_str(),
+        "inf" | "+inf" | "-inf" | "nan" | "+nan" | "-nan"
+    ) {
         return f64::NAN;
     }
     text.parse::<f64>().unwrap_or(f64::NAN)
@@ -209,19 +212,46 @@ pub struct Ability {
 }
 
 pub const ABILITIES: [Ability; 6] = [
-    Ability { key: "str", label: "Сила", abbr: "СИЛ" },
-    Ability { key: "dex", label: "Ловкость", abbr: "ЛОВ" },
-    Ability { key: "con", label: "Телосложение", abbr: "ТЕЛ" },
-    Ability { key: "int", label: "Интеллект", abbr: "ИНТ" },
-    Ability { key: "wis", label: "Мудрость", abbr: "МДР" },
-    Ability { key: "cha", label: "Харизма", abbr: "ХАР" },
+    Ability {
+        key: "str",
+        label: "Сила",
+        abbr: "СИЛ",
+    },
+    Ability {
+        key: "dex",
+        label: "Ловкость",
+        abbr: "ЛОВ",
+    },
+    Ability {
+        key: "con",
+        label: "Телосложение",
+        abbr: "ТЕЛ",
+    },
+    Ability {
+        key: "int",
+        label: "Интеллект",
+        abbr: "ИНТ",
+    },
+    Ability {
+        key: "wis",
+        label: "Мудрость",
+        abbr: "МДР",
+    },
+    Ability {
+        key: "cha",
+        label: "Харизма",
+        abbr: "ХАР",
+    },
 ];
 
 /// `ABILITY_LABELS`.
 pub fn ability_labels() -> Value {
     let mut labels = Map::new();
     for ability in ABILITIES {
-        labels.insert(ability.key.to_string(), Value::String(ability.label.to_string()));
+        labels.insert(
+            ability.key.to_string(),
+            Value::String(ability.label.to_string()),
+        );
     }
     Value::Object(labels)
 }
@@ -235,24 +265,96 @@ pub struct Skill {
 }
 
 pub const SKILLS: [Skill; 18] = [
-    Skill { key: "acrobatics", label: "Акробатика", ability: "dex" },
-    Skill { key: "animalHandling", label: "Уход за животными", ability: "wis" },
-    Skill { key: "arcana", label: "Магия", ability: "int" },
-    Skill { key: "athletics", label: "Атлетика", ability: "str" },
-    Skill { key: "deception", label: "Обман", ability: "cha" },
-    Skill { key: "history", label: "История", ability: "int" },
-    Skill { key: "insight", label: "Проницательность", ability: "wis" },
-    Skill { key: "intimidation", label: "Запугивание", ability: "cha" },
-    Skill { key: "investigation", label: "Анализ", ability: "int" },
-    Skill { key: "medicine", label: "Медицина", ability: "wis" },
-    Skill { key: "nature", label: "Природа", ability: "int" },
-    Skill { key: "perception", label: "Внимательность", ability: "wis" },
-    Skill { key: "performance", label: "Выступление", ability: "cha" },
-    Skill { key: "persuasion", label: "Убеждение", ability: "cha" },
-    Skill { key: "religion", label: "Религия", ability: "int" },
-    Skill { key: "sleightOfHand", label: "Ловкость рук", ability: "dex" },
-    Skill { key: "stealth", label: "Скрытность", ability: "dex" },
-    Skill { key: "survival", label: "Выживание", ability: "wis" },
+    Skill {
+        key: "acrobatics",
+        label: "Акробатика",
+        ability: "dex",
+    },
+    Skill {
+        key: "animalHandling",
+        label: "Уход за животными",
+        ability: "wis",
+    },
+    Skill {
+        key: "arcana",
+        label: "Магия",
+        ability: "int",
+    },
+    Skill {
+        key: "athletics",
+        label: "Атлетика",
+        ability: "str",
+    },
+    Skill {
+        key: "deception",
+        label: "Обман",
+        ability: "cha",
+    },
+    Skill {
+        key: "history",
+        label: "История",
+        ability: "int",
+    },
+    Skill {
+        key: "insight",
+        label: "Проницательность",
+        ability: "wis",
+    },
+    Skill {
+        key: "intimidation",
+        label: "Запугивание",
+        ability: "cha",
+    },
+    Skill {
+        key: "investigation",
+        label: "Анализ",
+        ability: "int",
+    },
+    Skill {
+        key: "medicine",
+        label: "Медицина",
+        ability: "wis",
+    },
+    Skill {
+        key: "nature",
+        label: "Природа",
+        ability: "int",
+    },
+    Skill {
+        key: "perception",
+        label: "Внимательность",
+        ability: "wis",
+    },
+    Skill {
+        key: "performance",
+        label: "Выступление",
+        ability: "cha",
+    },
+    Skill {
+        key: "persuasion",
+        label: "Убеждение",
+        ability: "cha",
+    },
+    Skill {
+        key: "religion",
+        label: "Религия",
+        ability: "int",
+    },
+    Skill {
+        key: "sleightOfHand",
+        label: "Ловкость рук",
+        ability: "dex",
+    },
+    Skill {
+        key: "stealth",
+        label: "Скрытность",
+        ability: "dex",
+    },
+    Skill {
+        key: "survival",
+        label: "Выживание",
+        ability: "wis",
+    },
 ];
 
 pub const HIT_DICE: [&str; 4] = ["1d6", "1d8", "1d10", "1d12"];
@@ -265,18 +367,54 @@ pub struct DnDClass {
 }
 
 pub const CLASSES: [DnDClass; 12] = [
-    DnDClass { label: "Варвар", hit_die: "d12" },
-    DnDClass { label: "Бард", hit_die: "d8" },
-    DnDClass { label: "Воин", hit_die: "d10" },
-    DnDClass { label: "Волшебник", hit_die: "d6" },
-    DnDClass { label: "Друид", hit_die: "d8" },
-    DnDClass { label: "Жрец", hit_die: "d8" },
-    DnDClass { label: "Колдун", hit_die: "d8" },
-    DnDClass { label: "Монах", hit_die: "d8" },
-    DnDClass { label: "Паладин", hit_die: "d10" },
-    DnDClass { label: "Плут", hit_die: "d8" },
-    DnDClass { label: "Следопыт", hit_die: "d10" },
-    DnDClass { label: "Чародей", hit_die: "d6" },
+    DnDClass {
+        label: "Варвар",
+        hit_die: "d12",
+    },
+    DnDClass {
+        label: "Бард",
+        hit_die: "d8",
+    },
+    DnDClass {
+        label: "Воин",
+        hit_die: "d10",
+    },
+    DnDClass {
+        label: "Волшебник",
+        hit_die: "d6",
+    },
+    DnDClass {
+        label: "Друид",
+        hit_die: "d8",
+    },
+    DnDClass {
+        label: "Жрец",
+        hit_die: "d8",
+    },
+    DnDClass {
+        label: "Колдун",
+        hit_die: "d8",
+    },
+    DnDClass {
+        label: "Монах",
+        hit_die: "d8",
+    },
+    DnDClass {
+        label: "Паладин",
+        hit_die: "d10",
+    },
+    DnDClass {
+        label: "Плут",
+        hit_die: "d8",
+    },
+    DnDClass {
+        label: "Следопыт",
+        hit_die: "d10",
+    },
+    DnDClass {
+        label: "Чародей",
+        hit_die: "d6",
+    },
 ];
 
 pub const MAX_CLASS_ENTRIES: usize = 6;
@@ -293,22 +431,118 @@ pub struct Condition {
 }
 
 pub const CONDITIONS: [Condition; 16] = [
-    Condition { id: "blinded", label: "Слепой", short: "Слепой", effect: "blindfold", no_move: false },
-    Condition { id: "charmed", label: "Очарован", short: "Очар.", effect: "charmed", no_move: false },
-    Condition { id: "deafened", label: "Глухой", short: "Глухой", effect: "deafened", no_move: false },
-    Condition { id: "dazzled", label: "Ослеплён", short: "Ослеп", effect: "dazzled", no_move: false },
-    Condition { id: "exhaustion", label: "Истощение", short: "Истощ.", effect: "exhaustion", no_move: false },
-    Condition { id: "frightened", label: "Испуган", short: "Испуг", effect: "frightened", no_move: false },
-    Condition { id: "grappled", label: "Схвачен", short: "Схват", effect: "grappled", no_move: false },
-    Condition { id: "incapacitated", label: "Недееспособен", short: "Недеесп.", effect: "chained", no_move: true },
-    Condition { id: "invisible", label: "Невидим", short: "Невид.", effect: "veil", no_move: false },
-    Condition { id: "paralyzed", label: "Парализован", short: "Парал.", effect: "bolt", no_move: true },
-    Condition { id: "petrified", label: "Окаменел", short: "Окамен.", effect: "stone", no_move: true },
-    Condition { id: "poisoned", label: "Отравлен", short: "Отравл.", effect: "poison", no_move: false },
-    Condition { id: "prone", label: "Сбит с ног", short: "Лежит", effect: "prone", no_move: false },
-    Condition { id: "restrained", label: "Опутан", short: "Опут.", effect: "vines", no_move: true },
-    Condition { id: "stunned", label: "Оглушён", short: "Оглуш.", effect: "dizzy", no_move: true },
-    Condition { id: "unconscious", label: "Без сознания", short: "Без созн.", effect: "unconscious", no_move: true },
+    Condition {
+        id: "blinded",
+        label: "Слепой",
+        short: "Слепой",
+        effect: "blindfold",
+        no_move: false,
+    },
+    Condition {
+        id: "charmed",
+        label: "Очарован",
+        short: "Очар.",
+        effect: "charmed",
+        no_move: false,
+    },
+    Condition {
+        id: "deafened",
+        label: "Глухой",
+        short: "Глухой",
+        effect: "deafened",
+        no_move: false,
+    },
+    Condition {
+        id: "dazzled",
+        label: "Ослеплён",
+        short: "Ослеп",
+        effect: "dazzled",
+        no_move: false,
+    },
+    Condition {
+        id: "exhaustion",
+        label: "Истощение",
+        short: "Истощ.",
+        effect: "exhaustion",
+        no_move: false,
+    },
+    Condition {
+        id: "frightened",
+        label: "Испуган",
+        short: "Испуг",
+        effect: "frightened",
+        no_move: false,
+    },
+    Condition {
+        id: "grappled",
+        label: "Схвачен",
+        short: "Схват",
+        effect: "grappled",
+        no_move: false,
+    },
+    Condition {
+        id: "incapacitated",
+        label: "Недееспособен",
+        short: "Недеесп.",
+        effect: "chained",
+        no_move: true,
+    },
+    Condition {
+        id: "invisible",
+        label: "Невидим",
+        short: "Невид.",
+        effect: "veil",
+        no_move: false,
+    },
+    Condition {
+        id: "paralyzed",
+        label: "Парализован",
+        short: "Парал.",
+        effect: "bolt",
+        no_move: true,
+    },
+    Condition {
+        id: "petrified",
+        label: "Окаменел",
+        short: "Окамен.",
+        effect: "stone",
+        no_move: true,
+    },
+    Condition {
+        id: "poisoned",
+        label: "Отравлен",
+        short: "Отравл.",
+        effect: "poison",
+        no_move: false,
+    },
+    Condition {
+        id: "prone",
+        label: "Сбит с ног",
+        short: "Лежит",
+        effect: "prone",
+        no_move: false,
+    },
+    Condition {
+        id: "restrained",
+        label: "Опутан",
+        short: "Опут.",
+        effect: "vines",
+        no_move: true,
+    },
+    Condition {
+        id: "stunned",
+        label: "Оглушён",
+        short: "Оглуш.",
+        effect: "dizzy",
+        no_move: true,
+    },
+    Condition {
+        id: "unconscious",
+        label: "Без сознания",
+        short: "Без созн.",
+        effect: "unconscious",
+        no_move: true,
+    },
 ];
 
 /// `MOVE_BLOCKING`.
@@ -330,14 +564,54 @@ pub struct SurfaceType {
 }
 
 pub const SURFACE_TYPES: [SurfaceType; 8] = [
-    SurfaceType { id: "fire", label: "Огонь", short: "огонь", color: "#e0702c" },
-    SurfaceType { id: "acid", label: "Кислота", short: "кислота", color: "#a86ed8" },
-    SurfaceType { id: "water", label: "Вода", short: "вода", color: "#3f8fd0" },
-    SurfaceType { id: "ice", label: "Лёд", short: "лёд", color: "#9fd8e8" },
-    SurfaceType { id: "poison", label: "Яд", short: "яд", color: "#7fb23f" },
-    SurfaceType { id: "slick", label: "Скользкость", short: "скользко", color: "#c9b46a" },
-    SurfaceType { id: "smoke", label: "Дым", short: "дым", color: "#8b8b93" },
-    SurfaceType { id: "rubble", label: "Руины", short: "руины", color: "#8d7a63" },
+    SurfaceType {
+        id: "fire",
+        label: "Огонь",
+        short: "огонь",
+        color: "#e0702c",
+    },
+    SurfaceType {
+        id: "acid",
+        label: "Кислота",
+        short: "кислота",
+        color: "#a86ed8",
+    },
+    SurfaceType {
+        id: "water",
+        label: "Вода",
+        short: "вода",
+        color: "#3f8fd0",
+    },
+    SurfaceType {
+        id: "ice",
+        label: "Лёд",
+        short: "лёд",
+        color: "#9fd8e8",
+    },
+    SurfaceType {
+        id: "poison",
+        label: "Яд",
+        short: "яд",
+        color: "#7fb23f",
+    },
+    SurfaceType {
+        id: "slick",
+        label: "Скользкость",
+        short: "скользко",
+        color: "#c9b46a",
+    },
+    SurfaceType {
+        id: "smoke",
+        label: "Дым",
+        short: "дым",
+        color: "#8b8b93",
+    },
+    SurfaceType {
+        id: "rubble",
+        label: "Руины",
+        short: "руины",
+        color: "#8d7a63",
+    },
 ];
 
 /// `SURFACE_IDS`.
@@ -441,18 +715,78 @@ pub struct LightPreset {
 }
 
 pub const LIGHT_PRESETS: [LightPreset; 12] = [
-    LightPreset { id: "torch", label: "Факел", radius: 20, color: "#ffab4d" },
-    LightPreset { id: "lantern", label: "Фонарь", radius: 30, color: "#ffd27a" },
-    LightPreset { id: "campfire", label: "Костёр", radius: 40, color: "#ff8b3d" },
-    LightPreset { id: "candle", label: "Свеча", radius: 5, color: "#fff0c2" },
-    LightPreset { id: "hood", label: "Фонарь в капюшоне", radius: 10, color: "#b9c8ff" },
-    LightPreset { id: "moon", label: "Лунный свет", radius: 60, color: "#7d9cff" },
-    LightPreset { id: "stars", label: "Свет звёзд", radius: 80, color: "#9fd0ff" },
-    LightPreset { id: "torchlight", label: "Свет фонаря на клинке", radius: 25, color: "#ffc27a" },
-    LightPreset { id: "will-o-wisp", label: "Болотный огонь", radius: 20, color: "#8ef0a8" },
-    LightPreset { id: "arcane", label: "Волшебный свет", radius: 30, color: "#c49bff" },
-    LightPreset { id: "blood", label: "Красный свет", radius: 20, color: "#ff6b6b" },
-    LightPreset { id: "daylight", label: "Дневной свет", radius: 120, color: "#fff6e0" },
+    LightPreset {
+        id: "torch",
+        label: "Факел",
+        radius: 20,
+        color: "#ffab4d",
+    },
+    LightPreset {
+        id: "lantern",
+        label: "Фонарь",
+        radius: 30,
+        color: "#ffd27a",
+    },
+    LightPreset {
+        id: "campfire",
+        label: "Костёр",
+        radius: 40,
+        color: "#ff8b3d",
+    },
+    LightPreset {
+        id: "candle",
+        label: "Свеча",
+        radius: 5,
+        color: "#fff0c2",
+    },
+    LightPreset {
+        id: "hood",
+        label: "Фонарь в капюшоне",
+        radius: 10,
+        color: "#b9c8ff",
+    },
+    LightPreset {
+        id: "moon",
+        label: "Лунный свет",
+        radius: 60,
+        color: "#7d9cff",
+    },
+    LightPreset {
+        id: "stars",
+        label: "Свет звёзд",
+        radius: 80,
+        color: "#9fd0ff",
+    },
+    LightPreset {
+        id: "torchlight",
+        label: "Свет фонаря на клинке",
+        radius: 25,
+        color: "#ffc27a",
+    },
+    LightPreset {
+        id: "will-o-wisp",
+        label: "Болотный огонь",
+        radius: 20,
+        color: "#8ef0a8",
+    },
+    LightPreset {
+        id: "arcane",
+        label: "Волшебный свет",
+        radius: 30,
+        color: "#c49bff",
+    },
+    LightPreset {
+        id: "blood",
+        label: "Красный свет",
+        radius: 20,
+        color: "#ff6b6b",
+    },
+    LightPreset {
+        id: "daylight",
+        label: "Дневной свет",
+        radius: 120,
+        color: "#fff6e0",
+    },
 ];
 
 pub const LIGHT_AMBIENT: &str = "#080a18";
@@ -536,7 +870,16 @@ pub const FULL_CASTER_SLOTS: [[u8; 9]; 20] = [
 ];
 
 pub const FULL_CASTER_CLASSES: [&str; 10] = [
-    "бард", "bard", "жрец", "cleric", "друид", "druid", "чародей", "sorcerer", "волшебник", "wizard",
+    "бард",
+    "bard",
+    "жрец",
+    "cleric",
+    "друид",
+    "druid",
+    "чародей",
+    "sorcerer",
+    "волшебник",
+    "wizard",
 ];
 
 /// `MAP_LABELS`.
@@ -560,8 +903,18 @@ pub const CALENDAR: Calendar = Calendar {
     days_per_month: 30,
     max_months: 24,
     month_names: [
-        "января", "февраля", "марта", "апреля", "мая", "июня",
-        "июля", "августа", "сентября", "октября", "ноября", "декабря",
+        "января",
+        "февраля",
+        "марта",
+        "апреля",
+        "мая",
+        "июня",
+        "июля",
+        "августа",
+        "сентября",
+        "октября",
+        "ноября",
+        "декабря",
     ],
 };
 
@@ -757,8 +1110,12 @@ fn class_levels_vec(sheet: &Value) -> Vec<ClassLevel> {
     }
     vec![ClassLevel {
         name: truncate_chars(&name, LIMITS.max_class_length as usize),
-        level: clamp_number_opt(raw.get("level"), LIMITS.min_level as f64, LIMITS.max_level as f64, 1.0)
-            as i64,
+        level: clamp_number_opt(
+            raw.get("level"),
+            LIMITS.min_level as f64,
+            LIMITS.max_level as f64,
+            1.0,
+        ) as i64,
     }]
 }
 
@@ -804,7 +1161,8 @@ pub fn hit_dice_pool(sheet: &Value) -> Value {
         }
     }
     if pool.is_empty() {
-        if let Some(sides) = hit_die_sides(&Value::String(js_str_or_empty(field(sheet, "hitDice")))) {
+        if let Some(sides) = hit_die_sides(&Value::String(js_str_or_empty(field(sheet, "hitDice"))))
+        {
             pool.push((format!("d{sides}"), sides, 1));
         }
     }
@@ -819,9 +1177,7 @@ pub fn hit_dice_pool(sheet: &Value) -> Value {
 pub fn combined_caster_level(sheet: &Value) -> i64 {
     class_levels_vec(sheet)
         .iter()
-        .filter(|entry| {
-            FULL_CASTER_CLASSES.contains(&entry.name.trim().to_lowercase().as_str())
-        })
+        .filter(|entry| FULL_CASTER_CLASSES.contains(&entry.name.trim().to_lowercase().as_str()))
         .map(|entry| entry.level)
         .sum()
 }
@@ -847,10 +1203,7 @@ pub fn spell_slot_row(char_class: &Value, level: &Value) -> Value {
     if !FULL_CASTER_CLASSES.contains(&name.as_str()) {
         return Value::Null;
     }
-    let lv = js_min(
-        20.0,
-        js_max(1.0, js_round(or_value(js_number(level), 1.0))),
-    ) as usize;
+    let lv = js_min(20.0, js_max(1.0, js_round(or_value(js_number(level), 1.0)))) as usize;
     Value::Array(
         FULL_CASTER_SLOTS[lv - 1]
             .iter()
@@ -1221,7 +1574,10 @@ pub fn light_polygon(light: &Value, walls: &Value, grid: &Value, options: &Value
         radius
     };
     let feet_per_cell = number_of(grid.get("feetPerCell"));
-    let radius_cells = js_max(LIGHT_LIMITS.min_radius, reach / js_max(0.001, feet_per_cell));
+    let radius_cells = js_max(
+        LIGHT_LIMITS.min_radius,
+        reach / js_max(0.001, feet_per_cell),
+    );
     let ox = number_of(light.get("x")) * columns;
     let oy = number_of(light.get("y")) * rows;
     let all_cells = walls_to_cells(walls);
@@ -1350,10 +1706,7 @@ pub fn open_fog_at(mask: &Value, x: &Value, y: &Value, radius: &Value) -> String
         Value::String(text) if text.len() == size => text.clone(),
         _ => normalize_fog_mask(mask),
     };
-    let r = js_max(
-        0.02,
-        js_min(0.5, or_value(js_number(radius), 0.12)),
-    );
+    let r = js_max(0.02, js_min(0.5, or_value(js_number(radius), 0.12)));
     let cx = js_max(0.0, js_min(1.0, or_value(js_number(x), 0.0)));
     let cy = js_max(0.0, js_min(1.0, or_value(js_number(y), 0.0)));
     let half_x = js_max(1.0, js_round(r * FOG.columns as f64)) as i64;
@@ -1720,9 +2073,8 @@ pub fn compute_derived(sheet: &Value) -> Value {
     for key in ABILITY_KEYS {
         modifiers.insert(key.to_string(), json!(ability_modifier_number(score(key))));
     }
-    let modifier_of = |key: &str| -> i64 {
-        modifiers.get(key).and_then(Value::as_i64).unwrap_or(0)
-    };
+    let modifier_of =
+        |key: &str| -> i64 { modifiers.get(key).and_then(Value::as_i64).unwrap_or(0) };
 
     let mut saves = Map::new();
     for key in ABILITY_KEYS {
@@ -1743,7 +2095,14 @@ pub fn compute_derived(sheet: &Value) -> Value {
     for skill in SKILLS {
         let proficient = flag_at(safe.get("skillProficiencies"), skill.key);
         let expertise = proficient && flag_at(safe.get("skillExpertise"), skill.key);
-        let bonus = prof_bonus * if expertise { 2 } else if proficient { 1 } else { 0 };
+        let bonus = prof_bonus
+            * if expertise {
+                2
+            } else if proficient {
+                1
+            } else {
+                0
+            };
         let base = modifier_of(skill.ability);
         skills.insert(
             skill.key.to_string(),
@@ -2037,13 +2396,8 @@ pub fn encounter_xp(actors: &Value) -> Value {
     let mut ignored = 0i64;
     if let Some(list) = actors.as_array() {
         for actor in list {
-            let number = js_max(
-                0.0,
-                js_min(
-                    20.0,
-                    js_round(num_or(actor.get("count"), 0.0)),
-                ),
-            ) as i64;
+            let number =
+                js_max(0.0, js_min(20.0, js_round(num_or(actor.get("count"), 0.0)))) as i64;
             if number == 0 {
                 continue;
             }
@@ -2100,10 +2454,7 @@ pub fn party_thresholds(levels: &Value) -> Value {
 
 /// `xpToNextLevel`. Returns `f64::INFINITY` at level 20, like JS `Infinity`.
 pub fn xp_to_next_level(level: &Value) -> f64 {
-    let index = js_max(
-        1.0,
-        js_min(20.0, js_round(or_value(js_number(level), 1.0))),
-    ) as usize;
+    let index = js_max(1.0, js_min(20.0, js_round(or_value(js_number(level), 1.0)))) as usize;
     if index >= 20 {
         return f64::INFINITY;
     }
@@ -2310,12 +2661,18 @@ mod tests {
     #[test]
     fn class_levels_fallback() {
         let sheet = json!({ "charClass": "  Паладин ", "level": 99 });
-        assert_eq!(class_levels(&sheet), json!([{ "name": "Паладин", "level": 20 }]));
+        assert_eq!(
+            class_levels(&sheet),
+            json!([{ "name": "Паладин", "level": 20 }])
+        );
         let sheet = json!({
             "charClass": "Паладин",
             "classes": [{ "name": "Бард", "level": 3 }]
         });
-        assert_eq!(class_levels(&sheet), json!([{ "name": "Бард", "level": 3 }]));
+        assert_eq!(
+            class_levels(&sheet),
+            json!([{ "name": "Бард", "level": 3 }])
+        );
         assert_eq!(class_levels(&json!({})), json!([]));
         assert_eq!(class_levels(&Value::Null), json!([]));
     }
@@ -2355,18 +2712,33 @@ mod tests {
             ]
         });
         assert_eq!(combined_caster_level(&sheet), 7);
-        assert_eq!(
-            caster_slot_row(&sheet),
-            json!([4, 4, 3, 3, 0, 0, 0, 0, 0])
-        );
+        assert_eq!(caster_slot_row(&sheet), json!([4, 4, 3, 3, 0, 0, 0, 0, 0]));
         assert_eq!(caster_slot_row(&json!({})), Value::Null);
-        assert_eq!(spell_slot_row(&json!("WIZARD"), &json!(5)), json!([4, 3, 3, 0, 0, 0, 0, 0, 0]));
+        assert_eq!(
+            spell_slot_row(&json!("WIZARD"), &json!(5)),
+            json!([4, 3, 3, 0, 0, 0, 0, 0, 0])
+        );
         assert_eq!(spell_slot_row(&json!("Воин"), &json!(5)), Value::Null);
-        assert_eq!(spell_slot_max(&json!("жрец"), &json!(5), &json!(1)), json!(4));
-        assert_eq!(spell_slot_max(&json!("жрец"), &json!(5), &json!(9)), json!(0));
-        assert_eq!(spell_slot_max(&json!("жрец"), &json!(5), &json!("1")), Value::Null);
-        assert_eq!(spell_slot_max(&json!("жрец"), &json!(5), &json!(1.0)), json!(4));
-        assert_eq!(spell_slot_max(&json!("жрец"), &json!(5), &json!(10)), Value::Null);
+        assert_eq!(
+            spell_slot_max(&json!("жрец"), &json!(5), &json!(1)),
+            json!(4)
+        );
+        assert_eq!(
+            spell_slot_max(&json!("жрец"), &json!(5), &json!(9)),
+            json!(0)
+        );
+        assert_eq!(
+            spell_slot_max(&json!("жрец"), &json!(5), &json!("1")),
+            Value::Null
+        );
+        assert_eq!(
+            spell_slot_max(&json!("жрец"), &json!(5), &json!(1.0)),
+            json!(4)
+        );
+        assert_eq!(
+            spell_slot_max(&json!("жрец"), &json!(5), &json!(10)),
+            Value::Null
+        );
     }
 
     #[test]
@@ -2406,9 +2778,15 @@ mod tests {
         assert_eq!(round_columns(&json!(37.2)), 37.0);
         assert_eq!(round_columns(&json!(-5)), -5.0);
         assert_eq!(round_columns(&json!("abc")), 0.0);
-        assert_eq!(grid_cell_size(&json!({ "columns": 4 }), &json!(1000)), 250.0);
+        assert_eq!(
+            grid_cell_size(&json!({ "columns": 4 }), &json!(1000)),
+            250.0
+        );
         assert_eq!(grid_cell_size(&json!({ "columns": 4 }), &json!(100)), 25.0);
-        assert_eq!(grid_cell_size(&json!({ "columns": 0, "cell": 900 }), &json!(0)), 512.0);
+        assert_eq!(
+            grid_cell_size(&json!({ "columns": 0, "cell": 900 }), &json!(0)),
+            512.0
+        );
         assert_eq!(grid_cell_size(&json!({}), &json!(0)), 46.0);
         assert_eq!(grid_cell_size(&json!({ "cell": 1 }), &json!(0)), 8.0);
     }
@@ -2480,15 +2858,24 @@ mod tests {
         let lights: Vec<Value> = (0..100)
             .map(|index| json!({ "x": index as f64 / 100.0, "y": 0.5 }))
             .collect();
-        assert_eq!(normalize_lights(&json!(lights)).as_array().unwrap().len(), 80);
+        assert_eq!(
+            normalize_lights(&json!(lights)).as_array().unwrap().len(),
+            80
+        );
     }
 
     #[test]
     fn light_grid_and_walls_in_cells() {
         let grid = light_grid(&json!({ "columns": 40, "feetPerCell": 10 }), &json!(2));
-        assert_eq!(grid, json!({ "columns": 40, "rows": 20, "feetPerCell": 10 }));
+        assert_eq!(
+            grid,
+            json!({ "columns": 40, "rows": 20, "feetPerCell": 10 })
+        );
         let grid = light_grid(&json!({ "columns": 0, "feetPerCell": 500 }), &json!(0));
-        assert_eq!(grid, json!({ "columns": 200, "rows": 200, "feetPerCell": 50 }));
+        assert_eq!(
+            grid,
+            json!({ "columns": 200, "rows": 200, "feetPerCell": 50 })
+        );
 
         let walls = json!([
             { "x1": 0, "y1": 0, "x2": 1, "y2": 1 },
@@ -2497,7 +2884,10 @@ mod tests {
         ]);
         let cells = walls_in_cells(&walls, &json!({ "columns": 10, "rows": 5 }), None);
         assert_eq!(cells.as_array().unwrap().len(), 3);
-        assert_eq!(cells[0], json!({ "x1": 0.0, "y1": 0.0, "x2": 10.0, "y2": 5.0 }));
+        assert_eq!(
+            cells[0],
+            json!({ "x1": 0.0, "y1": 0.0, "x2": 10.0, "y2": 5.0 })
+        );
 
         let light = walls_in_cells(&walls, &json!({ "columns": 10, "rows": 5 }), Some("light"));
         assert_eq!(light.as_array().unwrap().len(), 1);
@@ -2507,13 +2897,26 @@ mod tests {
 
     #[test]
     fn cast_ray_and_distance() {
-        let walls = [CellWall { x1: 5.0, y1: -1.0, x2: 5.0, y2: 1.0 }];
+        let walls = [CellWall {
+            x1: 5.0,
+            y1: -1.0,
+            x2: 5.0,
+            y2: 1.0,
+        }];
         assert_eq!(cast_ray(0.0, 0.0, 1.0, 0.0, 10.0, &walls), 5.0);
         assert_eq!(cast_ray(0.0, 0.0, -1.0, 0.0, 10.0, &walls), 10.0);
-        let parallel = [CellWall { x1: 0.0, y1: 5.0, x2: 10.0, y2: 5.0 }];
+        let parallel = [CellWall {
+            x1: 0.0,
+            y1: 5.0,
+            x2: 10.0,
+            y2: 5.0,
+        }];
         assert_eq!(cast_ray(0.0, 0.0, 1.0, 0.0, 10.0, &parallel), 10.0);
         assert_eq!(distance_to_segment(0.0, 0.0, 1.0, -1.0, 1.0, 1.0), 1.0);
-        assert_eq!(distance_to_segment(0.0, 0.0, 1.0, 1.0, 1.0, 1.0), 2f64.sqrt());
+        assert_eq!(
+            distance_to_segment(0.0, 0.0, 1.0, 1.0, 1.0, 1.0),
+            2f64.sqrt()
+        );
     }
 
     #[test]
@@ -2565,11 +2968,31 @@ mod tests {
             json!(["blindfold", "veil"])
         );
         assert_eq!(condition_effects(&json!({})), json!([]));
-        assert!(condition_roll_disadvantage(&json!(["poisoned"]), "check", None));
-        assert!(!condition_roll_disadvantage(&json!(["poisoned"]), "save", None));
-        assert!(condition_roll_disadvantage(&json!(["blinded"]), "attack", None));
-        assert!(condition_roll_disadvantage(&json!(["restrained"]), "save", Some("dex")));
-        assert!(!condition_roll_disadvantage(&json!(["restrained"]), "save", Some("str")));
+        assert!(condition_roll_disadvantage(
+            &json!(["poisoned"]),
+            "check",
+            None
+        ));
+        assert!(!condition_roll_disadvantage(
+            &json!(["poisoned"]),
+            "save",
+            None
+        ));
+        assert!(condition_roll_disadvantage(
+            &json!(["blinded"]),
+            "attack",
+            None
+        ));
+        assert!(condition_roll_disadvantage(
+            &json!(["restrained"]),
+            "save",
+            Some("dex")
+        ));
+        assert!(!condition_roll_disadvantage(
+            &json!(["restrained"]),
+            "save",
+            Some("str")
+        ));
         assert!(!condition_roll_disadvantage(&json!("nope"), "attack", None));
     }
 
@@ -2586,12 +3009,27 @@ mod tests {
         assert_eq!(exhaustion_effects(&json!("abc"))["level"], json!(0));
         assert_eq!(exhaustion_effects(&json!(5))["speedMultiplier"], json!(0.0));
 
-        assert_eq!(effective_max_hp(&json!({ "maxHp": 50, "exhaustion": 4 })), 25.0);
-        assert_eq!(effective_max_hp(&json!({ "maxHp": 50, "exhaustion": 0 })), 50.0);
+        assert_eq!(
+            effective_max_hp(&json!({ "maxHp": 50, "exhaustion": 4 })),
+            25.0
+        );
+        assert_eq!(
+            effective_max_hp(&json!({ "maxHp": 50, "exhaustion": 0 })),
+            50.0
+        );
         assert_eq!(effective_max_hp(&json!({ "maxHp": "abc" })), 0.0);
-        assert_eq!(effective_max_hp(&json!({ "maxHp": 25, "exhaustion": 5 })), 12.0);
-        assert_eq!(effective_speed(&json!({ "speed": 30, "exhaustion": 2 })), 15.0);
-        assert_eq!(effective_speed(&json!({ "speed": 30, "exhaustion": 5 })), 0.0);
+        assert_eq!(
+            effective_max_hp(&json!({ "maxHp": 25, "exhaustion": 5 })),
+            12.0
+        );
+        assert_eq!(
+            effective_speed(&json!({ "speed": 30, "exhaustion": 2 })),
+            15.0
+        );
+        assert_eq!(
+            effective_speed(&json!({ "speed": 30, "exhaustion": 5 })),
+            0.0
+        );
         assert_eq!(effective_speed(&json!({ "speed": 31 })), 31.0);
         assert_eq!(effective_speed(&json!({ "speed": "abc" })), 0.0);
         assert_eq!(ability_modifier(&json!(16)), 3);
@@ -2616,10 +3054,22 @@ mod tests {
             calendar_from_day(&json!(0), &Value::Null),
             json!({ "year": 1, "month": 1, "day": 1, "name": "января" })
         );
-        assert_eq!(day_from_calendar(&json!(1), &json!(2), &json!(7), &Value::Null), 37);
-        assert_eq!(day_from_calendar(&json!(2), &json!(1), &json!(1), &Value::Null), 361);
-        assert_eq!(format_game_time(&json!({ "day": 37, "hour": 9 }), &Value::Null), "7 февраля 1 г., 09:00");
-        assert_eq!(format_game_time(&json!({ "day": 37, "hour": 99 }), &Value::Null), "7 февраля 1 г., 23:00");
+        assert_eq!(
+            day_from_calendar(&json!(1), &json!(2), &json!(7), &Value::Null),
+            37
+        );
+        assert_eq!(
+            day_from_calendar(&json!(2), &json!(1), &json!(1), &Value::Null),
+            361
+        );
+        assert_eq!(
+            format_game_time(&json!({ "day": 37, "hour": 9 }), &Value::Null),
+            "7 февраля 1 г., 09:00"
+        );
+        assert_eq!(
+            format_game_time(&json!({ "day": 37, "hour": 99 }), &Value::Null),
+            "7 февраля 1 г., 23:00"
+        );
         assert_eq!(month_index_from_value(&json!(12), &Value::Null), 12);
         assert_eq!(month_index_from_value(&json!("3"), &Value::Null), 3);
         assert_eq!(month_index_from_value(&json!(" 6 "), &Value::Null), 6);
@@ -2651,7 +3101,9 @@ mod tests {
             json!("Стабилизирован")
         );
         assert_eq!(
-            compute_vital_state(&json!({ "hp": -5, "deathSavesSuccesses": 1, "deathSavesFailures": 1 }))["label"],
+            compute_vital_state(
+                &json!({ "hp": -5, "deathSavesSuccesses": 1, "deathSavesFailures": 1 })
+            )["label"],
             json!("При смерти")
         );
 
@@ -2687,9 +3139,12 @@ mod tests {
         assert_eq!(derived["profBonus"], json!(3));
         assert_eq!(derived["modifiers"]["str"], json!(3));
         assert_eq!(derived["modifiers"]["wis"], json!(1));
-        assert_eq!(derived["saves"]["str"], json!({
-            "ability": "str", "proficient": true, "base": 3, "total": 6
-        }));
+        assert_eq!(
+            derived["saves"]["str"],
+            json!({
+                "ability": "str", "proficient": true, "base": 3, "total": 6
+            })
+        );
         assert_eq!(derived["skills"]["perception"]["base"], json!(1));
         assert_eq!(derived["skills"]["perception"]["total"], json!(7));
         assert_eq!(derived["initiative"], json!(4));
@@ -2744,11 +3199,23 @@ mod tests {
         assert!(xp_to_next_level(&json!(25)).is_infinite());
 
         let thresholds = json!({ "easy": 50, "medium": 100, "hard": 150, "deadly": 200 });
-        assert_eq!(encounter_difficulty(&json!(250), &thresholds), json!("deadly"));
-        assert_eq!(encounter_difficulty(&json!(150), &thresholds), json!("hard"));
-        assert_eq!(encounter_difficulty(&json!(100), &thresholds), json!("medium"));
+        assert_eq!(
+            encounter_difficulty(&json!(250), &thresholds),
+            json!("deadly")
+        );
+        assert_eq!(
+            encounter_difficulty(&json!(150), &thresholds),
+            json!("hard")
+        );
+        assert_eq!(
+            encounter_difficulty(&json!(100), &thresholds),
+            json!("medium")
+        );
         assert_eq!(encounter_difficulty(&json!(50), &thresholds), json!("easy"));
-        assert_eq!(encounter_difficulty(&json!(10), &thresholds), json!("trivial"));
+        assert_eq!(
+            encounter_difficulty(&json!(10), &thresholds),
+            json!("trivial")
+        );
         assert_eq!(encounter_difficulty(&json!(10), &Value::Null), Value::Null);
     }
 
@@ -2761,12 +3228,18 @@ mod tests {
         ]));
         let pins = pins.as_array().unwrap();
         assert_eq!(pins.len(), 2);
-        assert_eq!(pins[0], json!({
-            "id": "pin-0", "x": 0.5, "y": 1.0, "title": "Пин", "text": ""
-        }));
-        assert_eq!(pins[1], json!({
-            "id": "pin-1", "x": 0.0, "y": 0.0, "title": "Пин", "text": "hi"
-        }));
+        assert_eq!(
+            pins[0],
+            json!({
+                "id": "pin-0", "x": 0.5, "y": 1.0, "title": "Пин", "text": ""
+            })
+        );
+        assert_eq!(
+            pins[1],
+            json!({
+                "id": "pin-1", "x": 0.0, "y": 0.0, "title": "Пин", "text": "hi"
+            })
+        );
         assert_eq!(normalize_pins(&json!("nope")), json!([]));
     }
 

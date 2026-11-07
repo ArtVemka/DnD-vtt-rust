@@ -180,9 +180,7 @@ pub fn parse_formula(text: &str) -> Result<ParsedFormula, ParseError> {
             .map(|side| format!("d{side}"))
             .collect::<Vec<_>>()
             .join(", ");
-        return Err(error(format!(
-            "Костей d{sides} не бывает. Доступны {list}"
-        )));
+        return Err(error(format!("Костей d{sides} не бывает. Доступны {list}")));
     }
     if let Some(keep) = keep {
         if keep.value < 1 || keep.value > count {
@@ -235,10 +233,7 @@ pub struct Roll {
 }
 
 /// Rolls a parsed formula. `random_int(min, max)` must be inclusive.
-pub fn roll_formula(
-    parsed: &ParsedFormula,
-    random_int: &mut dyn FnMut(u32, u32) -> u32,
-) -> Roll {
+pub fn roll_formula(parsed: &ParsedFormula, random_int: &mut dyn FnMut(u32, u32) -> u32) -> Roll {
     let values: Vec<u32> = (0..parsed.count)
         .map(|_| random_int(1, parsed.sides).clamp(1, parsed.sides))
         .collect();
@@ -289,7 +284,9 @@ pub fn describe_roll(roll: &Roll) -> String {
     }
     let mut text = format!(
         "{head}: {}",
-        roll.result.map(|value| value.to_string()).unwrap_or_default()
+        roll.result
+            .map(|value| value.to_string())
+            .unwrap_or_default()
     );
     if let Some(dropped) = &roll.dropped_values {
         if !dropped.is_empty() {
@@ -373,10 +370,34 @@ mod tests {
 
     #[test]
     fn parses_keep_and_drop() {
-        assert_eq!(parsed("4d6dl1").keep, Some(Keep { mode: KeepMode::Dl, value: 1 }));
-        assert_eq!(parsed("2d20kh1+7").keep, Some(Keep { mode: KeepMode::Kh, value: 1 }));
-        assert_eq!(parsed("2d20kl1").keep, Some(Keep { mode: KeepMode::Kl, value: 1 }));
-        assert_eq!(parsed("3d8dh2").keep, Some(Keep { mode: KeepMode::Dh, value: 2 }));
+        assert_eq!(
+            parsed("4d6dl1").keep,
+            Some(Keep {
+                mode: KeepMode::Dl,
+                value: 1
+            })
+        );
+        assert_eq!(
+            parsed("2d20kh1+7").keep,
+            Some(Keep {
+                mode: KeepMode::Kh,
+                value: 1
+            })
+        );
+        assert_eq!(
+            parsed("2d20kl1").keep,
+            Some(Keep {
+                mode: KeepMode::Kl,
+                value: 1
+            })
+        );
+        assert_eq!(
+            parsed("3d8dh2").keep,
+            Some(Keep {
+                mode: KeepMode::Dh,
+                value: 2
+            })
+        );
     }
 
     #[test]
@@ -405,7 +426,12 @@ mod tests {
             parse_formula("4d6dl5").unwrap_err().0,
             "«dl5» не имеет смысла при 4 костях в броске"
         );
-        assert!(parse_formula("2d6+3x").unwrap_err().0.starts_with("Не понял формулу «2d6+3x»"));
+        assert!(
+            parse_formula("2d6+3x")
+                .unwrap_err()
+                .0
+                .starts_with("Не понял формулу «2d6+3x»")
+        );
     }
 
     #[test]

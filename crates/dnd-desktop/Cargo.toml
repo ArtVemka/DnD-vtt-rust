@@ -10,6 +10,12 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 dnd-core = { path = "../dnd-core" }
 dnd-server = { path = "../dnd-server" }
+dnd-importer = { path = "../dnd-importer" }
+socketioxide = "0.18"
+discord-rich-presence = "1.1"
+iroh = "1.4"
+base64 = "0.22"
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"

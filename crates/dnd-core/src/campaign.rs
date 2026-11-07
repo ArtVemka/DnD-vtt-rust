@@ -14,10 +14,10 @@ use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
 use chrono::{SecondsFormat, Utc};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use uuid::Uuid;
 
-use crate::model::{empty_maps, CAMPAIGN_FORMAT_VERSION};
+use crate::model::{CAMPAIGN_FORMAT_VERSION, empty_maps};
 use crate::sheet::sanitize_text;
 
 pub const MAX_FILES_BYTES: u64 = 512 * 1024 * 1024;
@@ -151,7 +151,12 @@ pub fn collect_file_refs(state: &Value) -> std::collections::HashSet<String> {
                 continue;
             }
             add_ref(&mut refs, slot.get("url"));
-            for item in slot.get("items").and_then(Value::as_array).into_iter().flatten() {
+            for item in slot
+                .get("items")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
                 add_ref(&mut refs, item.get("url"));
                 add_ref(&mut refs, item.get("audioRef"));
             }
@@ -250,7 +255,9 @@ impl CampaignStore {
 
     pub fn dir_for(&self, campaign_id: &str) -> Result<PathBuf> {
         if !valid_campaign_id(campaign_id) {
-            return Err(CampaignError::message("Некорректный идентификатор кампании"));
+            return Err(CampaignError::message(
+                "Некорректный идентификатор кампании",
+            ));
         }
         Ok(self.root_dir.join(campaign_id))
     }
@@ -432,7 +439,10 @@ impl CampaignStore {
         let source = if label.is_empty() { campaign_id } else { label };
         let filtered: String = source
             .chars()
-            .filter(|c| !matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') && !c.is_control())
+            .filter(|c| {
+                !matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*')
+                    && !c.is_control()
+            })
             .collect();
         let trimmed = filtered.trim();
         let mut dashed = String::new();
@@ -633,7 +643,11 @@ impl CampaignStore {
         };
         let mut total = 0;
         for entry in entries.flatten() {
-            if entry.file_type().map(|kind| kind.is_file()).unwrap_or(false) {
+            if entry
+                .file_type()
+                .map(|kind| kind.is_file())
+                .unwrap_or(false)
+            {
                 total += entry.metadata().map(|meta| meta.len()).unwrap_or(0);
             }
         }
@@ -641,7 +655,12 @@ impl CampaignStore {
     }
 
     /// Deletes files no longer referenced by the state.
-    pub fn sweep_files(&self, campaign_id: &str, state: &Value, keep_ms: Option<u64>) -> Result<usize> {
+    pub fn sweep_files(
+        &self,
+        campaign_id: &str,
+        state: &Value,
+        keep_ms: Option<u64>,
+    ) -> Result<usize> {
         let keep_ms = keep_ms.unwrap_or(SWEEP_KEEP_MS);
         let keep = collect_file_refs(state);
         let Ok(entries) = fs::read_dir(self.files_dir(campaign_id)?) else {
@@ -734,7 +753,11 @@ mod tests {
         let mut campaign = store.create("Тест").expect("create");
         campaign["name"] = json!("Новое имя");
         store.save(&mut campaign).expect("save");
-        assert!(root.join(campaign["id"].as_str().unwrap()).join("campaign.json.bak").exists());
+        assert!(
+            root.join(campaign["id"].as_str().unwrap())
+                .join("campaign.json.bak")
+                .exists()
+        );
         let loaded = store.load(campaign["id"].as_str().unwrap()).expect("load");
         assert_eq!(loaded["name"], "Новое имя");
         let _ = fs::remove_dir_all(root);
@@ -763,7 +786,8 @@ mod tests {
         let id = campaign["id"].as_str().unwrap();
         let kept = store.save_image(id, b"keep", "png").expect("save");
         let dropped = store.save_image(id, b"drop", "png").expect("save");
-        let state = json!({ "maps": { "world": { "items": [{ "url": format!("/files/{kept}") }] } } });
+        let state =
+            json!({ "maps": { "world": { "items": [{ "url": format!("/files/{kept}") }] } } });
         let removed = store.sweep_files(id, &state, Some(0)).expect("sweep");
         assert_eq!(removed, 1);
         let files = store.files_dir(id).unwrap();

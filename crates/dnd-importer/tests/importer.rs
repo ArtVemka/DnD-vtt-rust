@@ -10,8 +10,7 @@ use dnd_importer::{inspect, run_import};
 use serde_json::{Value, json};
 
 /// Минимальный настоящий PNG.
-const PNG_BASE64: &str =
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+const PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 fn png_data_url() -> String {
     format!("data:image/png;base64,{PNG_BASE64}")
@@ -191,17 +190,22 @@ fn as_file(value: &Value) -> Vec<u8> {
 
 fn inspect_json(value: &Value, context: &Value) -> Result<Value, ImportError> {
     let data = as_file(value);
-    inspect(&Input { data: &data, path: Some("приключение.json") }, context)
+    inspect(
+        &Input {
+            data: &data,
+            path: Some("приключение.json"),
+        },
+        context,
+    )
 }
 
-fn run_json(
-    value: &Value,
-    include: Value,
-    context: &Value,
-) -> Result<Value, ImportError> {
+fn run_json(value: &Value, include: Value, context: &Value) -> Result<Value, ImportError> {
     let data = as_file(value);
     run_import(
-        &Input { data: &data, path: Some("приключение.json") },
+        &Input {
+            data: &data,
+            path: Some("приключение.json"),
+        },
         &json!({ "include": include }),
         context,
     )
@@ -244,7 +248,10 @@ fn preview_finds_every_supported_kind() {
     kinds.dedup();
     assert_eq!(kinds, ["actor", "item", "journal", "macro", "scene"]);
     assert_eq!(preview["sourceTitle"], "Пещера Кобольда");
-    assert_eq!(preview["total"], 9, "3 сцены, 2 заметки, 2 актёра, 1 предмет, 1 макрос");
+    assert_eq!(
+        preview["total"], 9,
+        "3 сцены, 2 заметки, 2 актёра, 1 предмет, 1 макрос"
+    );
 }
 
 #[test]
@@ -258,7 +265,12 @@ fn macro_is_visible_but_not_selectable() {
         .expect("macro plan");
     assert_eq!(macro_plan["selectable"], false);
     assert_eq!(macro_plan["selected"], false);
-    assert!(macro_plan["note"].as_str().expect("note").contains("Макрос"));
+    assert!(
+        macro_plan["note"]
+            .as_str()
+            .expect("note")
+            .contains("Макрос")
+    );
 }
 
 #[test]
@@ -267,7 +279,13 @@ fn scene_without_image_is_not_importable_and_explains_why() {
     let empty = plan(&preview, "scene-no-image");
     assert_eq!(empty["selectable"], false);
     assert_eq!(empty["selected"], false);
-    assert!(empty["note"].as_str().expect("note").to_lowercase().contains("картинк"));
+    assert!(
+        empty["note"]
+            .as_str()
+            .expect("note")
+            .to_lowercase()
+            .contains("картинк")
+    );
 }
 
 #[test]
@@ -281,9 +299,12 @@ fn scene_with_broken_image_is_not_importable_and_warns() {
             .as_array()
             .expect("warnings")
             .iter()
-            .any(|warning| warning.as_str().is_some_and(|text| text.to_lowercase().contains("картинк")))
+            .any(|warning| warning
+                .as_str()
+                .is_some_and(|text| text.to_lowercase().contains("картинк")))
     );
-    let error = run_json(&adventure, json!(["scene-1"]), &fresh_context()).expect_err("must reject");
+    let error =
+        run_json(&adventure, json!(["scene-1"]), &fresh_context()).expect_err("must reject");
     assert!(error.message.contains("Не выбрано ни одной сущности"));
 }
 
@@ -298,7 +319,13 @@ fn unknown_document_is_skipped_with_reason() {
     assert_eq!(preview["plans"][0]["name"], "Ключ от двери");
     let skipped = preview["skipped"].as_array().expect("skipped");
     assert_eq!(skipped.len(), 1);
-    assert!(skipped[0]["reason"].as_str().expect("reason").to_lowercase().contains("неизвестн"));
+    assert!(
+        skipped[0]["reason"]
+            .as_str()
+            .expect("reason")
+            .to_lowercase()
+            .contains("неизвестн")
+    );
 }
 
 #[test]
@@ -315,7 +342,12 @@ fn scene_takes_a_free_map_slot() {
     let scene = plan(&preview, "scene-1");
     assert_eq!(scene["selectable"], true);
     assert_eq!(scene["target"], "world");
-    assert!(scene["targetLabel"].as_str().expect("label").contains("Общая"));
+    assert!(
+        scene["targetLabel"]
+            .as_str()
+            .expect("label")
+            .contains("Общая")
+    );
 }
 
 #[test]
@@ -335,8 +367,15 @@ fn occupied_world_slot_falls_back_to_battle() {
 
 #[test]
 fn map_is_imported_with_image_url_and_scene_name() {
-    let result = run_json(&make_adventure(json!({})), json!(["scene-1"]), &fresh_context()).expect("import");
-    let maps = result["patch"]["maps"]["world"]["items"].as_array().expect("maps");
+    let result = run_json(
+        &make_adventure(json!({})),
+        json!(["scene-1"]),
+        &fresh_context(),
+    )
+    .expect("import");
+    let maps = result["patch"]["maps"]["world"]["items"]
+        .as_array()
+        .expect("maps");
     assert_eq!(maps.len(), 1);
     assert_eq!(maps[0]["url"], png_data_url());
     assert_eq!(maps[0]["name"], "Вход в пещеру");
@@ -344,10 +383,18 @@ fn map_is_imported_with_image_url_and_scene_name() {
 
 #[test]
 fn scene_tokens_become_tokens_with_relative_coordinates() {
-    let result = run_json(&make_adventure(json!({})), json!(["scene-1"]), &fresh_context()).expect("import");
+    let result = run_json(
+        &make_adventure(json!({})),
+        json!(["scene-1"]),
+        &fresh_context(),
+    )
+    .expect("import");
     let tokens = result["patch"]["tokens"].as_array().expect("tokens");
     assert_eq!(tokens.len(), 2);
-    let kobold = tokens.iter().find(|token| token["name"] == "Кобольд").expect("kobold");
+    let kobold = tokens
+        .iter()
+        .find(|token| token["name"] == "Кобольд")
+        .expect("kobold");
     assert_eq!(kobold["mapType"], "world");
     let x = kobold["x"].as_f64().expect("x");
     let y = kobold["y"].as_f64().expect("y");
@@ -357,41 +404,90 @@ fn scene_tokens_become_tokens_with_relative_coordinates() {
 
 #[test]
 fn html_in_notes_is_stripped() {
-    let result = run_json(&make_adventure(json!({})), json!(["journal-1"]), &fresh_context()).expect("import");
-    let notes = result["patch"]["adventure"]["notes"].as_array().expect("notes");
-    let note = notes.iter().find(|note| note["sourceId"] == "journal-1").expect("note");
+    let result = run_json(
+        &make_adventure(json!({})),
+        json!(["journal-1"]),
+        &fresh_context(),
+    )
+    .expect("import");
+    let notes = result["patch"]["adventure"]["notes"]
+        .as_array()
+        .expect("notes");
+    let note = notes
+        .iter()
+        .find(|note| note["sourceId"] == "journal-1")
+        .expect("note");
     assert_eq!(note["text"], "Не открывай дверь");
 }
 
 #[test]
 fn only_selected_documents_are_imported() {
-    let result = run_json(&make_adventure(json!({})), json!(["journal-1", "item-1"]), &fresh_context()).expect("import");
+    let result = run_json(
+        &make_adventure(json!({})),
+        json!(["journal-1", "item-1"]),
+        &fresh_context(),
+    )
+    .expect("import");
     let adventure = &result["patch"]["adventure"];
     assert_eq!(adventure["notes"].as_array().expect("notes").len(), 1);
     assert_eq!(adventure["items"].as_array().expect("items").len(), 1);
     assert_eq!(adventure["actors"].as_array().expect("actors").len(), 0);
-    assert_eq!(result["patch"]["maps"]["world"]["items"].as_array().expect("maps").len(), 0);
-    assert_eq!(result["patch"]["tokens"].as_array().expect("tokens").len(), 0);
-    assert_eq!(result["report"]["applied"].as_array().expect("applied").len(), 2);
+    assert_eq!(
+        result["patch"]["maps"]["world"]["items"]
+            .as_array()
+            .expect("maps")
+            .len(),
+        0
+    );
+    assert_eq!(
+        result["patch"]["tokens"].as_array().expect("tokens").len(),
+        0
+    );
+    assert_eq!(
+        result["report"]["applied"]
+            .as_array()
+            .expect("applied")
+            .len(),
+        2
+    );
 }
 
 #[test]
 fn actor_goes_to_the_adventure_reference_with_a_statblock() {
-    let result = run_json(&make_adventure(json!({})), json!(["actor-1"]), &fresh_context()).expect("import");
-    let actors = result["patch"]["adventure"]["actors"].as_array().expect("actors");
-    let actor = actors.iter().find(|actor| actor["sourceId"] == "actor-1").expect("actor");
+    let result = run_json(
+        &make_adventure(json!({})),
+        json!(["actor-1"]),
+        &fresh_context(),
+    )
+    .expect("import");
+    let actors = result["patch"]["adventure"]["actors"]
+        .as_array()
+        .expect("actors");
+    let actor = actors
+        .iter()
+        .find(|actor| actor["sourceId"] == "actor-1")
+        .expect("actor");
     assert_eq!(actor["name"], "Вор Рамза");
     assert_eq!(actor["image"], png_data_url());
     assert_eq!(actor["statblock"]["ac"], 15);
     assert_eq!(actor["statblock"]["hp"], 22);
     assert_eq!(actor["statblock"]["abilities"]["str"], 14);
-    assert!(actor["statblock"]["speed"].as_str().expect("speed").contains("30"));
-    assert_eq!(result["patch"]["tokens"].as_array().expect("tokens").len(), 0);
+    assert!(
+        actor["statblock"]["speed"]
+            .as_str()
+            .expect("speed")
+            .contains("30")
+    );
+    assert_eq!(
+        result["patch"]["tokens"].as_array().expect("tokens").len(),
+        0
+    );
 }
 
 #[test]
 fn empty_selection_is_rejected() {
-    let error = run_json(&make_adventure(json!({})), json!([]), &fresh_context()).expect_err("must reject");
+    let error =
+        run_json(&make_adventure(json!({})), json!([]), &fresh_context()).expect_err("must reject");
     assert_eq!(error.code, "nothing-selected");
     assert!(error.message.contains("Не выбрано ни одной сущности"));
 }
@@ -400,7 +496,14 @@ fn empty_selection_is_rejected() {
 fn zip_import_works_like_json() {
     let data = as_file(&make_adventure(json!({})));
     let zip = make_zip(&[("adventure.json", &data)]);
-    let preview = inspect(&Input { data: &zip, path: Some("приключение.zip") }, &zip_context()).expect("preview");
+    let preview = inspect(
+        &Input {
+            data: &zip,
+            path: Some("приключение.zip"),
+        },
+        &zip_context(),
+    )
+    .expect("preview");
     assert_eq!(preview["sourceTitle"], "Пещера Кобольда");
     let scenes = preview["plans"]
         .as_array()
@@ -413,8 +516,18 @@ fn zip_import_works_like_json() {
 
 #[test]
 fn summary_uses_russian_plurals() {
-    let one = run_json(&make_adventure(json!({})), json!(["journal-1"]), &fresh_context()).expect("import");
-    assert!(one["report"]["summary"].as_str().expect("summary").contains("1 заметка."));
+    let one = run_json(
+        &make_adventure(json!({})),
+        json!(["journal-1"]),
+        &fresh_context(),
+    )
+    .expect("import");
+    assert!(
+        one["report"]["summary"]
+            .as_str()
+            .expect("summary")
+            .contains("1 заметка.")
+    );
 
     let journals: Vec<Value> = (0..4)
         .map(|index| json!({ "_id": format!("j{index}"), "type": "JournalEntry", "name": format!("Записка {index}") }))
@@ -425,7 +538,12 @@ fn summary_uses_russian_plurals() {
         &fresh_context(),
     )
     .expect("import");
-    assert!(four["report"]["summary"].as_str().expect("summary").contains("4 заметки."));
+    assert!(
+        four["report"]["summary"]
+            .as_str()
+            .expect("summary")
+            .contains("4 заметки.")
+    );
 
     let journals: Vec<Value> = (0..5)
         .map(|index| json!({ "_id": format!("k{index}"), "type": "JournalEntry", "name": format!("Записка {index}") }))
@@ -436,7 +554,12 @@ fn summary_uses_russian_plurals() {
         &fresh_context(),
     )
     .expect("import");
-    assert!(five["report"]["summary"].as_str().expect("summary").contains("5 заметок."));
+    assert!(
+        five["report"]["summary"]
+            .as_str()
+            .expect("summary")
+            .contains("5 заметок.")
+    );
 }
 
 #[test]
@@ -447,7 +570,14 @@ fn real_export_reads_scene_background_from_the_archive() {
         ("adventure.json", &adventure),
         ("assets/upper_level.png", &png),
     ]);
-    let preview = inspect(&Input { data: &zip, path: Some("храм.zip") }, &zip_context()).expect("preview");
+    let preview = inspect(
+        &Input {
+            data: &zip,
+            path: Some("храм.zip"),
+        },
+        &zip_context(),
+    )
+    .expect("preview");
     let scene = preview["plans"]
         .as_array()
         .expect("plans")
@@ -457,13 +587,21 @@ fn real_export_reads_scene_background_from_the_archive() {
     assert_eq!(scene["selectable"], true, "{}", scene["note"]);
 
     let result = run_import(
-        &Input { data: &zip, path: Some("храм.zip") },
+        &Input {
+            data: &zip,
+            path: Some("храм.zip"),
+        },
         &json!({ "include": ["rs1"] }),
         &zip_context(),
     )
     .expect("import");
     let map = &result["patch"]["maps"]["world"]["items"][0];
-    assert!(map["url"].as_str().expect("url").starts_with("data:image/png;base64,"));
+    assert!(
+        map["url"]
+            .as_str()
+            .expect("url")
+            .starts_with("data:image/png;base64,")
+    );
 }
 
 #[test]
@@ -475,13 +613,21 @@ fn real_export_builds_journal_text_from_pages() {
         ("assets/upper_level.png", &png),
     ]);
     let result = run_import(
-        &Input { data: &zip, path: Some("храм.zip") },
+        &Input {
+            data: &zip,
+            path: Some("храм.zip"),
+        },
         &json!({ "include": ["rj1"] }),
         &zip_context(),
     )
     .expect("import");
-    let notes = result["patch"]["adventure"]["notes"].as_array().expect("notes");
-    let note = notes.iter().find(|note| note["sourceId"] == "rj1").expect("note");
+    let notes = result["patch"]["adventure"]["notes"]
+        .as_array()
+        .expect("notes");
+    let note = notes
+        .iter()
+        .find(|note| note["sourceId"] == "rj1")
+        .expect("note");
     let text = note["text"].as_str().expect("text");
     assert!(text.contains("Тайное общество волшебников"));
     assert!(text.contains("воспоминания"));
@@ -498,21 +644,31 @@ fn real_export_tokens_take_the_name_from_delta_and_bind_to_their_map() {
         ("assets/berserker.png", &png),
     ]);
     let result = run_import(
-        &Input { data: &zip, path: Some("храм.zip") },
+        &Input {
+            data: &zip,
+            path: Some("храм.zip"),
+        },
         &json!({ "include": ["rs1"] }),
         &zip_context(),
     )
     .expect("import");
     let tokens = result["patch"]["tokens"].as_array().expect("tokens");
     assert_eq!(tokens.len(), 2);
-    let named = tokens.iter().find(|token| token["name"] == "Берсерк-2").expect("delta name");
+    let named = tokens
+        .iter()
+        .find(|token| token["name"] == "Берсерк-2")
+        .expect("delta name");
     let x = named["x"].as_f64().expect("x");
     let y = named["y"].as_f64().expect("y");
     assert!((x - 2000.25 / 2700.0).abs() < 0.001, "x = {x}");
     assert!((y - 2000.25 / 3000.0).abs() < 0.001, "y = {y}");
     let map_id = &result["patch"]["maps"]["world"]["items"][0]["id"];
     for token in tokens {
-        assert_eq!(&token["mapId"], map_id, "token {} belongs to its map", token["name"]);
+        assert_eq!(
+            &token["mapId"], map_id,
+            "token {} belongs to its map",
+            token["name"]
+        );
     }
 }
 
@@ -534,9 +690,18 @@ fn foundry_file_path_is_explained_not_silently_dropped() {
     let warnings = preview["warnings"].as_array().expect("warnings");
     let warning = warnings
         .iter()
-        .find(|warning| warning.as_str().is_some_and(|text| text.contains("Янтарный храм")))
+        .find(|warning| {
+            warning
+                .as_str()
+                .is_some_and(|text| text.contains("Янтарный храм"))
+        })
         .expect("warning");
-    assert!(warning.as_str().expect("warning").contains("modules/что-то/карта.webp"));
+    assert!(
+        warning
+            .as_str()
+            .expect("warning")
+            .contains("modules/что-то/карта.webp")
+    );
 }
 
 #[test]
@@ -610,8 +775,14 @@ fn rolltable_rows_are_mapped_from_raw_results() {
     assert_eq!(rows[0]["weight"], 1);
     assert_eq!(rows[1]["label"], "Медведь");
     assert_eq!(rows[1]["weight"], 2);
-    assert!(rows[1].get("min").is_none(), "range отсутствует — min не пишется");
-    assert!(rows[1].get("max").is_none(), "range отсутствует — max не пишется");
+    assert!(
+        rows[1].get("min").is_none(),
+        "range отсутствует — min не пишется"
+    );
+    assert!(
+        rows[1].get("max").is_none(),
+        "range отсутствует — max не пишется"
+    );
 }
 
 #[test]
@@ -619,12 +790,20 @@ fn adventure_caps_produce_a_warning() {
     let journals: Vec<Value> = (0..301)
         .map(|index| json!({ "_id": format!("j{index}"), "type": "JournalEntry", "name": format!("Записка {index}") }))
         .collect();
-    let preview = inspect_json(&make_adventure(json!({ "journal": journals })), &fresh_context()).expect("preview");
+    let preview = inspect_json(
+        &make_adventure(json!({ "journal": journals })),
+        &fresh_context(),
+    )
+    .expect("preview");
     let warning = preview["warnings"]
         .as_array()
         .expect("warnings")
         .iter()
-        .find(|warning| warning.as_str().is_some_and(|text| text.contains("заметок")))
+        .find(|warning| {
+            warning
+                .as_str()
+                .is_some_and(|text| text.contains("заметок"))
+        })
         .expect("cap warning");
     assert!(warning.as_str().expect("warning").contains("301 из 300"));
 }
@@ -667,7 +846,10 @@ fn normalization_drops_unidentifiable_and_unknown_entities() {
     assert_eq!(result.entities.len(), 1);
     assert_eq!(result.entities[0].source_id, "ok");
     assert_eq!(result.skipped.len(), 2);
-    assert_eq!(result.skipped[0].reason, "нет ни идентификатора, ни названия");
+    assert_eq!(
+        result.skipped[0].reason,
+        "нет ни идентификатора, ни названия"
+    );
     assert_eq!(result.skipped[1].reason, "неизвестный вид «Mystery»");
 }
 
@@ -707,7 +889,10 @@ fn foundry_image_path_is_recorded_in_the_error() {
 fn zip_bomb_is_stopped_by_the_entry_ceiling() {
     let zeros = vec![0u8; 70 * 1024 * 1024];
     let zip = make_zip(&[("adventure.json", &zeros)]);
-    assert!(read_zip_json_and_assets(&zip).is_err(), "распаковка обязана прерваться");
+    assert!(
+        read_zip_json_and_assets(&zip).is_err(),
+        "распаковка обязана прерваться"
+    );
 }
 
 #[test]
@@ -715,7 +900,10 @@ fn empty_archive_is_rejected() {
     let zip = make_zip(&[]);
     let error = dnd_importer::adapters::foundry::from_zip_buffer(&zip).expect_err("empty archive");
     assert_eq!(error.code, "empty");
-    assert_eq!(error.message, "В архиве нет документов, которые можно импортировать.");
+    assert_eq!(
+        error.message,
+        "В архиве нет документов, которые можно импортировать."
+    );
 }
 
 #[test]
@@ -728,7 +916,14 @@ fn broken_zip_is_rejected() {
 
 #[test]
 fn unknown_file_gets_no_adapter_error() {
-    let error = inspect(&Input { data: b"hello", path: None }, &fresh_context()).expect_err("no adapter");
+    let error = inspect(
+        &Input {
+            data: b"hello",
+            path: None,
+        },
+        &fresh_context(),
+    )
+    .expect_err("no adapter");
     assert_eq!(error.code, E_NO_ADAPTER);
 }
 

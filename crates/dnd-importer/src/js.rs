@@ -31,7 +31,9 @@ pub fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(flag) => *flag,
-        Value::Number(number) => number.as_f64().is_some_and(|num| num != 0.0 && !num.is_nan()),
+        Value::Number(number) => number
+            .as_f64()
+            .is_some_and(|num| num != 0.0 && !num.is_nan()),
         Value::String(text) => !text.is_empty(),
         _ => true,
     }
@@ -94,7 +96,9 @@ pub fn number_to_value(value: f64) -> Value {
     if value.fract() == 0.0 && value >= i64::MIN as f64 && value <= i64::MAX as f64 {
         return json_i64(value as i64);
     }
-    Number::from_f64(value).map(Value::Number).unwrap_or(Value::Null)
+    Number::from_f64(value)
+        .map(Value::Number)
+        .unwrap_or(Value::Null)
 }
 
 fn json_i64(value: i64) -> Value {

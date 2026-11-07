@@ -62,7 +62,8 @@ pub fn sniff_image_format(buffer: &[u8]) -> MediaFormat {
     if buffer.len() >= 3 && at(buffer, 0..3) == [0xff, 0xd8, 0xff] {
         return MediaFormat::supported("jpg", "JPEG");
     }
-    if buffer.len() >= 12 && ascii_at(buffer, 0..4) == b"RIFF" && ascii_at(buffer, 8..12) == b"WEBP" {
+    if buffer.len() >= 12 && ascii_at(buffer, 0..4) == b"RIFF" && ascii_at(buffer, 8..12) == b"WEBP"
+    {
         return MediaFormat::supported("webp", "WEBP");
     }
     if buffer.len() >= 6 && matches!(ascii_at(buffer, 0..6), b"GIF87a" | b"GIF89a") {
@@ -79,7 +80,10 @@ pub fn sniff_image_format(buffer: &[u8]) -> MediaFormat {
     }
     if buffer.len() >= 12 && ascii_at(buffer, 4..8) == b"ftyp" {
         let brand = ascii_at(buffer, 8..12);
-        if matches!(brand, b"heic" | b"heix" | b"hevc" | b"hevx" | b"mif1" | b"msf1") {
+        if matches!(
+            brand,
+            b"heic" | b"heix" | b"hevc" | b"hevx" | b"mif1" | b"msf1"
+        ) {
             return MediaFormat::unsupported("heic", "HEIC (так фотографирует iPhone)");
         }
         if matches!(brand, b"avif" | b"avis") {
@@ -110,7 +114,8 @@ pub fn sniff_audio_format(buffer: &[u8]) -> MediaFormat {
     if buffer.len() >= 4 && ascii_at(buffer, 0..4) == b"OggS" {
         return MediaFormat::supported("ogg", "OGG");
     }
-    if buffer.len() >= 12 && ascii_at(buffer, 0..4) == b"RIFF" && ascii_at(buffer, 8..12) == b"WAVE" {
+    if buffer.len() >= 12 && ascii_at(buffer, 0..4) == b"RIFF" && ascii_at(buffer, 8..12) == b"WAVE"
+    {
         return MediaFormat::supported("wav", "WAV");
     }
     if buffer.len() >= 4 && ascii_at(buffer, 0..4) == b"fLaC" {
@@ -215,7 +220,10 @@ pub fn decode_audio(data_url: Option<&str>) -> Result<DecodedMedia, String> {
     let Some(parsed) = parse_data_url(value, "audio") else {
         return Err("Поддерживаются только аудио MP3, OGG и WAV".to_string());
     };
-    if !matches!(parsed.mime.as_str(), "mpeg" | "mp3" | "ogg" | "wav" | "x-wav") {
+    if !matches!(
+        parsed.mime.as_str(),
+        "mpeg" | "mp3" | "ogg" | "wav" | "x-wav"
+    ) {
         return Err("Поддерживаются только аудио MP3, OGG и WAV".to_string());
     }
     let Some(bytes) = decode_base64(parsed.body) else {
@@ -225,7 +233,10 @@ pub fn decode_audio(data_url: Option<&str>) -> Result<DecodedMedia, String> {
         return Err("Файл пустой".to_string());
     }
     if bytes.len() > LIMITS.max_audio_bytes as usize {
-        return Err(format!("Файл больше {} МБ", megabytes(LIMITS.max_audio_bytes as usize)));
+        return Err(format!(
+            "Файл больше {} МБ",
+            megabytes(LIMITS.max_audio_bytes as usize)
+        ));
     }
     let format = sniff_audio_format(&bytes);
     if !format.supported {
@@ -357,9 +368,6 @@ mod tests {
             decode_audio(Some(&data_url("audio", "wav", FLAC))).unwrap_err(),
             "Формат FLAC не поддерживается. Сохраните звук как MP3, OGG или WAV."
         );
-        assert_eq!(
-            decode_audio(None).unwrap_err(),
-            "Звук не передан"
-        );
+        assert_eq!(decode_audio(None).unwrap_err(), "Звук не передан");
     }
 }

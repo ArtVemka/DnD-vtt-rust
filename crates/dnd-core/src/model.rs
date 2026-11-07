@@ -3,7 +3,7 @@
 //! Numeric limits and text sanitization live in `sheet.rs`; this module keeps
 //! only what has no better home.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// `CAMPAIGN_FORMAT_VERSION` in `server/state.js`.
 pub const CAMPAIGN_FORMAT_VERSION: i64 = 2;

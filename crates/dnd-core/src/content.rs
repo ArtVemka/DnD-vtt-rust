@@ -6,7 +6,7 @@
 
 use chrono::{SecondsFormat, Utc};
 use serde::Serialize;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use uuid::Uuid;
 
 use crate::rules::{CALENDAR, CONDITIONS, LIGHT_LIMITS, damage_type_ids, normalize_fog_mask};
@@ -261,7 +261,9 @@ pub fn normalize_calendar_months(raw: &Value) -> Value {
     let mut months = Vec::new();
     if let Some(items) = raw.as_array() {
         for item in items {
-            let name = collapse_whitespace(&sanitize_text(item, 40)).trim().to_string();
+            let name = collapse_whitespace(&sanitize_text(item, 40))
+                .trim()
+                .to_string();
             if name.is_empty() {
                 continue;
             }
@@ -292,13 +294,7 @@ pub fn normalize_calendar_event(raw: &Value) -> Value {
     if title.is_empty() {
         return Value::Null;
     }
-    let day = clamp_member_int(
-        raw,
-        "day",
-        TIME_LIMITS.min_day,
-        TIME_LIMITS.max_day,
-        0,
-    );
+    let day = clamp_member_int(raw, "day", TIME_LIMITS.min_day, TIME_LIMITS.max_day, 0);
     if day == 0 {
         return Value::Null;
     }
@@ -418,9 +414,7 @@ pub fn normalize_conditions(raw: &Value) -> Value {
         let Value::String(id) = item else {
             continue;
         };
-        if CONDITIONS.iter().any(|condition| condition.id == id)
-            && !seen.contains(&id.as_str())
-        {
+        if CONDITIONS.iter().any(|condition| condition.id == id) && !seen.contains(&id.as_str()) {
             seen.push(id);
         }
         if seen.len() >= LIMITS.max_token_conditions as usize {
@@ -659,7 +653,9 @@ fn normalize_journal_tags(value: &Value) -> Value {
         return Value::Array(tags);
     };
     for raw in items {
-        let tag = sanitize_text(raw, LIMITS.max_journal_tag).trim().to_string();
+        let tag = sanitize_text(raw, LIMITS.max_journal_tag)
+            .trim()
+            .to_string();
         if tag.is_empty() || !seen.insert(tag.to_lowercase()) {
             continue;
         }
@@ -1096,10 +1092,7 @@ mod tests {
             normalize_calendar_events(&many).as_array().unwrap().len(),
             LIMITS.max_calendar_events as usize
         );
-        assert_eq!(
-            normalize_calendar_events(&json!("x")),
-            Value::Array(vec![])
-        );
+        assert_eq!(normalize_calendar_events(&json!("x")), Value::Array(vec![]));
     }
 
     #[test]
@@ -1264,7 +1257,10 @@ mod tests {
         let emote = normalize_token_emote(&json!({ "text": "  привет  ", "until": until }))
             .expect("future emote");
         assert_eq!(emote["text"], json!("привет"));
-        assert_eq!(emote["until"].as_i64().unwrap(), js_round(until as f64) as i64);
+        assert_eq!(
+            emote["until"].as_i64().unwrap(),
+            js_round(until as f64) as i64
+        );
 
         assert_eq!(
             normalize_token_emote(&json!({ "text": "x", "until": 1 })),
@@ -1374,12 +1370,7 @@ mod tests {
         assert_eq!(entry["image"], json!(""));
         assert_eq!(entry["tags"], json!(["Лор", "Бой"]));
         assert_eq!(entry["visible"], json!(true));
-        assert!(
-            entry["updatedAt"]
-                .as_str()
-                .unwrap()
-                .ends_with('Z')
-        );
+        assert!(entry["updatedAt"].as_str().unwrap().ends_with('Z'));
 
         let generated = normalize_journal_entry(&json!({
             "id": "j-0123456789AB",
@@ -1434,7 +1425,8 @@ mod tests {
 
         let null_qty = normalize_inventory_item(&json!({ "name": "x", "qty": null }));
         assert_eq!(null_qty["qty"], json!(0));
-        let huge = normalize_inventory_item(&json!({ "name": "x", "qty": 20_000, "weight": 999_999 }));
+        let huge =
+            normalize_inventory_item(&json!({ "name": "x", "qty": 20_000, "weight": 999_999 }));
         assert_eq!(huge["qty"], json!(9999));
         assert_eq!(huge["weight"], json!(99_999));
     }
@@ -1503,10 +1495,7 @@ mod tests {
                 .collect(),
         );
         assert_eq!(
-            normalize_roll_requests(&requests)
-                .as_array()
-                .unwrap()
-                .len(),
+            normalize_roll_requests(&requests).as_array().unwrap().len(),
             LIMITS.max_roll_requests as usize
         );
     }

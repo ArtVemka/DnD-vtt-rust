@@ -7,11 +7,11 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use chrono::{SecondsFormat, Utc};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use crate::content;
 use crate::dice;
-use crate::model::{empty_maps, MAP_TYPES};
+use crate::model::{MAP_TYPES, empty_maps};
 use crate::rules;
 use crate::sheet::{self, LIMITS};
 
@@ -111,7 +111,10 @@ fn truthy(value: Option<&Value>) -> bool {
     match value {
         None | Some(Value::Null) => false,
         Some(Value::Bool(flag)) => *flag,
-        Some(Value::Number(number)) => number.as_f64().map(|n| n != 0.0 && !n.is_nan()).unwrap_or(false),
+        Some(Value::Number(number)) => number
+            .as_f64()
+            .map(|n| n != 0.0 && !n.is_nan())
+            .unwrap_or(false),
         Some(Value::String(text)) => !text.is_empty(),
         Some(Value::Array(_)) | Some(Value::Object(_)) => true,
     }
@@ -210,7 +213,12 @@ impl RoomState {
             adventure: None,
             sockets: BTreeMap::new(),
         };
-        if let Some(data) = state.campaign.get("state").filter(|value| value.is_object()).cloned() {
+        if let Some(data) = state
+            .campaign
+            .get("state")
+            .filter(|value| value.is_object())
+            .cloned()
+        {
             state.hydrate(&data);
         }
         state
@@ -233,9 +241,16 @@ impl RoomState {
             let player_id = js_string(Some(player_id));
             let is_dm = player_id == DM_PLAYER_ID;
             let name = {
-                let text = sheet::sanitize_text(player.get("name").unwrap_or(&Value::Null), LIMITS.max_name_length);
+                let text = sheet::sanitize_text(
+                    player.get("name").unwrap_or(&Value::Null),
+                    LIMITS.max_name_length,
+                );
                 if text.is_empty() {
-                    if is_dm { "ДМ".to_string() } else { "Игрок".to_string() }
+                    if is_dm {
+                        "ДМ".to_string()
+                    } else {
+                        "Игрок".to_string()
+                    }
                 } else {
                     text
                 }
@@ -244,7 +259,9 @@ impl RoomState {
                 .get("avatar")
                 .and_then(Value::as_str)
                 .filter(|value| !value.is_empty())
-                .map(|value| sheet::sanitize_text(&Value::String(value.to_string()), LIMITS.max_avatar_ref))
+                .map(|value| {
+                    sheet::sanitize_text(&Value::String(value.to_string()), LIMITS.max_avatar_ref)
+                })
                 .map(Value::String)
                 .unwrap_or(Value::Null);
             let joined_at = player
@@ -301,7 +318,11 @@ impl RoomState {
             .or_else(|| {
                 MAP_TYPES
                     .iter()
-                    .find(|kind| self.map_items(kind).map(|items| !items.is_empty()).unwrap_or(false))
+                    .find(|kind| {
+                        self.map_items(kind)
+                            .map(|items| !items.is_empty())
+                            .unwrap_or(false)
+                    })
                     .map(|kind| kind.to_string())
             });
 
@@ -321,9 +342,9 @@ impl RoomState {
                 .and_then(|slot| slot.get("items"))
                 .and_then(Value::as_array)
                 .map(|items| {
-                    items
-                        .iter()
-                        .any(|item| item.get("id").and_then(Value::as_str) == Some(stored_active_id.as_str()))
+                    items.iter().any(|item| {
+                        item.get("id").and_then(Value::as_str) == Some(stored_active_id.as_str())
+                    })
                 })
                 .unwrap_or(false);
         self.active_map_id = if stored_exists {
@@ -336,7 +357,8 @@ impl RoomState {
                 .filter(|id| !id.is_empty())
                 .map(str::to_string)
         };
-        if let (Some(kind), Some(active_id)) = (self.active_map.clone(), self.active_map_id.clone()) {
+        if let (Some(kind), Some(active_id)) = (self.active_map.clone(), self.active_map_id.clone())
+        {
             if let Some(items) = self.map_items_mut(&kind) {
                 if let Some(item) = items
                     .iter_mut()
@@ -354,7 +376,10 @@ impl RoomState {
             content::normalize_calendar_months(data.get("calendarMonths").unwrap_or(&Value::Null));
         self.calendar_events =
             content::normalize_calendar_events(data.get("calendarEvents").unwrap_or(&Value::Null));
-        self.party_notes = sheet::sanitize_text(data.get("partyNotes").unwrap_or(&Value::Null), LIMITS.max_party_notes);
+        self.party_notes = sheet::sanitize_text(
+            data.get("partyNotes").unwrap_or(&Value::Null),
+            LIMITS.max_party_notes,
+        );
 
         self.tokens = data
             .get("tokens")
@@ -372,7 +397,10 @@ impl RoomState {
         self.scenes = self.normalize_scenes(data.get("scenes").unwrap_or(&Value::Null));
 
         self.dice_history = last_n(
-            data.get("diceHistory").and_then(Value::as_array).cloned().unwrap_or_default(),
+            data.get("diceHistory")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default(),
             LIMITS.max_dice_history as usize,
         );
 
@@ -400,7 +428,10 @@ impl RoomState {
                     map
                 }
             };
-            let has_id = message.get("id").map(|id| truthy(Some(id))).unwrap_or(false);
+            let has_id = message
+                .get("id")
+                .map(|id| truthy(Some(id)))
+                .unwrap_or(false);
             if !has_id {
                 let time = js_string(message.get("time"));
                 message.insert("id".to_string(), json!(format!("old-{index}-{time}")));
@@ -409,34 +440,41 @@ impl RoomState {
         })
         .collect();
 
-        self.journal = sheet::sanitize_text(data.get("journal").unwrap_or(&Value::Null), LIMITS.max_journal);
-        self.initiative = content::normalize_initiative(data.get("initiative").unwrap_or(&Value::Null));
+        self.journal = sheet::sanitize_text(
+            data.get("journal").unwrap_or(&Value::Null),
+            LIMITS.max_journal,
+        );
+        self.initiative =
+            content::normalize_initiative(data.get("initiative").unwrap_or(&Value::Null));
         self.combat = json!({
             "enabled": truthy(data.get("combat").and_then(|combat| combat.get("enabled")))
         });
-        self.adventure = Some(sheet::normalize_adventure(data.get("adventure").unwrap_or(&Value::Null)))
-            .filter(|value| !value.is_null());
-        self.journal_entries = content::normalize_journal_entries(
-            data.get("journalEntries").unwrap_or(&Value::Null),
-        )
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
-        self.inventory = content::normalize_inventory(data.get("inventory").unwrap_or(&Value::Null))
-            .as_array()
-            .cloned()
-            .unwrap_or_default();
-        self.inventory_coins = sheet::normalize_coins(data.get("inventoryCoins").unwrap_or(&Value::Null));
-        self.roll_requests = content::normalize_roll_requests(
-            data.get("rollRequests").unwrap_or(&Value::Null),
-        )
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
-        self.soundboard = content::normalize_soundboard(data.get("soundboard").unwrap_or(&Value::Null))
-            .as_array()
-            .cloned()
-            .unwrap_or_default();
+        self.adventure = Some(sheet::normalize_adventure(
+            data.get("adventure").unwrap_or(&Value::Null),
+        ))
+        .filter(|value| !value.is_null());
+        self.journal_entries =
+            content::normalize_journal_entries(data.get("journalEntries").unwrap_or(&Value::Null))
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
+        self.inventory =
+            content::normalize_inventory(data.get("inventory").unwrap_or(&Value::Null))
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
+        self.inventory_coins =
+            sheet::normalize_coins(data.get("inventoryCoins").unwrap_or(&Value::Null));
+        self.roll_requests =
+            content::normalize_roll_requests(data.get("rollRequests").unwrap_or(&Value::Null))
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
+        self.soundboard =
+            content::normalize_soundboard(data.get("soundboard").unwrap_or(&Value::Null))
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
     }
 
     pub fn serialize(&self) -> Value {
@@ -492,7 +530,10 @@ impl RoomState {
     pub fn snapshot_for(&self, viewer: &Viewer) -> Value {
         let is_dm = viewer.is_dm();
         let sheets: Map<String, Value> = if is_dm {
-            self.sheets.iter().map(|(id, sheet)| (id.clone(), sheet.clone())).collect()
+            self.sheets
+                .iter()
+                .map(|(id, sheet)| (id.clone(), sheet.clone()))
+                .collect()
         } else {
             self.sheets
                 .get(&viewer.player_id)
@@ -538,7 +579,8 @@ impl RoomState {
                 .iter()
                 .filter(|request| {
                     !truthy(request.get("to"))
-                        || request.get("to").and_then(Value::as_str) == Some(viewer.player_id.as_str())
+                        || request.get("to").and_then(Value::as_str)
+                            == Some(viewer.player_id.as_str())
                 })
                 .cloned()
                 .collect()
@@ -549,7 +591,9 @@ impl RoomState {
         } else {
             self.pending_reactions
                 .iter()
-                .filter(|item| item.get("playerId").and_then(Value::as_str) == Some(viewer.player_id.as_str()))
+                .filter(|item| {
+                    item.get("playerId").and_then(Value::as_str) == Some(viewer.player_id.as_str())
+                })
                 .cloned()
                 .collect()
         };
@@ -610,9 +654,15 @@ impl RoomState {
                 if !options.include_hidden && !self.is_token_visible_to_players(token) {
                     continue;
                 }
-                if let Some(player_id) = token.get("assignedPlayerId").filter(|value| truthy(Some(value))) {
+                if let Some(player_id) = token
+                    .get("assignedPlayerId")
+                    .filter(|value| truthy(Some(value)))
+                {
                     let player_id = js_string(Some(player_id));
-                    let token_id = token.get("id").map(|id| js_string(Some(id))).unwrap_or_default();
+                    let token_id = token
+                        .get("id")
+                        .map(|id| js_string(Some(id)))
+                        .unwrap_or_default();
                     token_id_by_player.entry(player_id).or_insert(token_id);
                 }
             }
@@ -705,7 +755,11 @@ impl RoomState {
                 .insert(player_id.to_string(), sheet::create_empty_sheet(name));
         } else if let Some(player) = self.players.get_mut(player_id) {
             player["name"] = json!(name);
-            let has_key = player.get("playerKey").and_then(Value::as_str).map(|key| !key.is_empty()).unwrap_or(false);
+            let has_key = player
+                .get("playerKey")
+                .and_then(Value::as_str)
+                .map(|key| !key.is_empty())
+                .unwrap_or(false);
             if !player_key.is_empty() && !has_key {
                 player["playerKey"] = json!(player_key);
             }
@@ -731,7 +785,10 @@ impl RoomState {
         } else if let Some(dm) = self.players.get_mut(DM_PLAYER_ID) {
             dm["name"] = json!(name);
         }
-        self.players.get(DM_PLAYER_ID).cloned().unwrap_or(Value::Null)
+        self.players
+            .get(DM_PLAYER_ID)
+            .cloned()
+            .unwrap_or(Value::Null)
     }
 
     pub fn rename_player(&mut self, player_id: &str, name: &str) -> Option<Value> {
@@ -779,7 +836,10 @@ impl RoomState {
     }
 
     pub fn is_online(&self, player_id: &str) -> bool {
-        self.sockets.get(player_id).map(|sockets| !sockets.is_empty()).unwrap_or(false)
+        self.sockets
+            .get(player_id)
+            .map(|sockets| !sockets.is_empty())
+            .unwrap_or(false)
     }
 
     pub fn has_sheet(&self, player_id: &str) -> bool {
@@ -812,7 +872,11 @@ impl RoomState {
             .get("activeId")
             .filter(|value| truthy(Some(value)))
             .map(|value| js_string(Some(value)))
-            .filter(|id| items.iter().any(|item| item.get("id").and_then(Value::as_str) == Some(id.as_str())))
+            .filter(|id| {
+                items
+                    .iter()
+                    .any(|item| item.get("id").and_then(Value::as_str) == Some(id.as_str()))
+            })
             .map(Value::String)
             .or_else(|| items.first().and_then(|item| item.get("id")).cloned())
             .unwrap_or(Value::Null);
@@ -822,8 +886,13 @@ impl RoomState {
 
     fn map_item(&self, source: &Value, url: &str, published: bool) -> Value {
         let name = {
-            let text = sheet::sanitize_text(source.get("name").unwrap_or(&Value::Null), MAP_NAME_MAX);
-            if text.is_empty() { "Карта".to_string() } else { text }
+            let text =
+                sheet::sanitize_text(source.get("name").unwrap_or(&Value::Null), MAP_NAME_MAX);
+            if text.is_empty() {
+                "Карта".to_string()
+            } else {
+                text
+            }
         };
         let id = source
             .get("id")
@@ -894,12 +963,19 @@ impl RoomState {
             return false;
         }
         let map_type = token.get("mapType").and_then(Value::as_str).unwrap_or("");
-        let map_id = token.get("mapId").and_then(Value::as_str).filter(|value| !value.is_empty());
+        let map_id = token
+            .get("mapId")
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty());
         self.is_map_published(map_type, map_id)
     }
 
     pub fn map_slot_for_viewer(&self, kind: &str, is_dm: bool) -> Value {
-        let slot = self.maps.get(kind).cloned().unwrap_or_else(|| json!({ "items": [], "activeId": Value::Null }));
+        let slot = self
+            .maps
+            .get(kind)
+            .cloned()
+            .unwrap_or_else(|| json!({ "items": [], "activeId": Value::Null }));
         if is_dm {
             return slot;
         }
@@ -913,7 +989,12 @@ impl RoomState {
                     .map(|item| {
                         let mut item = item.clone();
                         if let Some(object) = item.as_object_mut() {
-                            if object.get("pins").and_then(Value::as_array).map(|pins| !pins.is_empty()).unwrap_or(false) {
+                            if object
+                                .get("pins")
+                                .and_then(Value::as_array)
+                                .map(|pins| !pins.is_empty())
+                                .unwrap_or(false)
+                            {
                                 object.remove("pins");
                             }
                         }
@@ -929,7 +1010,11 @@ impl RoomState {
         };
         let active_valid = active_id
             .as_deref()
-            .map(|id| items.iter().any(|item| item.get("id").and_then(Value::as_str) == Some(id)))
+            .map(|id| {
+                items
+                    .iter()
+                    .any(|item| item.get("id").and_then(Value::as_str) == Some(id))
+            })
             .unwrap_or(false);
         if !active_valid {
             active_id = items
@@ -954,7 +1039,8 @@ impl RoomState {
 
     /// `normalizeToken`: repairs a stored or incoming token.
     pub fn normalize_token(&self, token: &Value) -> Value {
-        let conditions = content::normalize_conditions(token.get("conditions").unwrap_or(&Value::Null));
+        let conditions =
+            content::normalize_conditions(token.get("conditions").unwrap_or(&Value::Null));
         let durations = content::normalize_condition_durations(
             token.get("conditionDurations").unwrap_or(&Value::Null),
             &conditions,
@@ -982,13 +1068,23 @@ impl RoomState {
         };
         let armor_number = number_of(token.get("armorClass"));
         let armor_class = if armor_number.is_finite() && armor_number >= 1.0 {
-            json!(sheet::clamp_int(token.get("armorClass").unwrap_or(&Value::Null), 1, 60, 10))
+            json!(sheet::clamp_int(
+                token.get("armorClass").unwrap_or(&Value::Null),
+                1,
+                60,
+                10
+            ))
         } else {
             Value::Null
         };
         let max_hp_number = number_of(token.get("maxHp"));
         let (max_hp, hp) = if max_hp_number.is_finite() && max_hp_number > 0.0 {
-            let max_hp = sheet::clamp_int(token.get("maxHp").unwrap_or(&Value::Null), 1, LIMITS.max_token_hp, 1);
+            let max_hp = sheet::clamp_int(
+                token.get("maxHp").unwrap_or(&Value::Null),
+                1,
+                LIMITS.max_token_hp,
+                1,
+            );
             let current = number_of(token.get("hp"));
             let hp = if current.is_finite() {
                 sheet::clamp_int(token.get("hp").unwrap_or(&Value::Null), 0, max_hp, 0)
@@ -1005,8 +1101,15 @@ impl RoomState {
             .map(str::to_string)
             .unwrap_or_else(|| TOKEN_PALETTE[0].to_string());
         let name = {
-            let text = sheet::sanitize_text(token.get("name").unwrap_or(&Value::Null), LIMITS.max_name_length);
-            if text.is_empty() { "Фишка".to_string() } else { text }
+            let text = sheet::sanitize_text(
+                token.get("name").unwrap_or(&Value::Null),
+                LIMITS.max_name_length,
+            );
+            if text.is_empty() {
+                "Фишка".to_string()
+            } else {
+                text
+            }
         };
         let map_type = token
             .get("mapType")
@@ -1046,10 +1149,15 @@ impl RoomState {
             "damageImmunities": content::normalize_damage_defenses(token.get("damageImmunities").unwrap_or(&Value::Null))
         });
 
-        if let Some(emote) = content::normalize_token_emote(token.get("emote").unwrap_or(&Value::Null)) {
+        if let Some(emote) =
+            content::normalize_token_emote(token.get("emote").unwrap_or(&Value::Null))
+        {
             result["emote"] = emote;
         }
-        let concentration = js_trim(token.get("concentration").unwrap_or(&Value::Null), LIMITS.max_concentration_length);
+        let concentration = js_trim(
+            token.get("concentration").unwrap_or(&Value::Null),
+            LIMITS.max_concentration_length,
+        );
         if !concentration.is_empty() {
             result["concentration"] = json!(concentration);
         }
@@ -1102,7 +1210,11 @@ impl RoomState {
             .get(map_type)
             .and_then(|slot| slot.get("items"))
             .and_then(Value::as_array)
-            .and_then(|items| items.iter().find(|item| item.get("id").and_then(Value::as_str) == Some(map_id)));
+            .and_then(|items| {
+                items
+                    .iter()
+                    .find(|item| item.get("id").and_then(Value::as_str) == Some(map_id))
+            });
         json!({
             "id": scene.get("id").cloned().unwrap_or(Value::Null),
             "name": scene.get("name").cloned().unwrap_or(Value::Null),
@@ -1140,7 +1252,11 @@ impl RoomState {
                 .get(map_type)
                 .and_then(|slot| slot.get("items"))
                 .and_then(Value::as_array)
-                .map(|items| items.iter().any(|map| map.get("id").and_then(Value::as_str) == Some(map_id.as_str())))
+                .map(|items| {
+                    items
+                        .iter()
+                        .any(|map| map.get("id").and_then(Value::as_str) == Some(map_id.as_str()))
+                })
                 .unwrap_or(false);
             if !map_exists {
                 continue;
@@ -1165,13 +1281,20 @@ impl RoomState {
                         .map(|token| self.normalize_token(token))
                         .filter(|token| {
                             token.get("mapType").and_then(Value::as_str) == Some(map_type)
-                                && token.get("mapId").and_then(Value::as_str) == Some(map_id.as_str())
+                                && token.get("mapId").and_then(Value::as_str)
+                                    == Some(map_id.as_str())
                         })
                         .collect()
                 })
                 .unwrap_or_default();
-            let map = item.get("map").filter(|value| value.is_object()).unwrap_or(&Value::Null);
-            let name = js_trim(item.get("name").unwrap_or(&Value::Null), LIMITS.max_scene_name);
+            let map = item
+                .get("map")
+                .filter(|value| value.is_object())
+                .unwrap_or(&Value::Null);
+            let name = js_trim(
+                item.get("name").unwrap_or(&Value::Null),
+                LIMITS.max_scene_name,
+            );
             scenes.push(json!({
                 "id": id,
                 "name": if name.is_empty() { "Сцена".to_string() } else { name },
@@ -1229,11 +1352,7 @@ fn text_or_now(value: Option<&Value>) -> String {
         .chars()
         .take(40)
         .collect();
-    if text.is_empty() {
-        now_iso()
-    } else {
-        text
-    }
+    if text.is_empty() { now_iso() } else { text }
 }
 
 #[cfg(test)]
@@ -1276,7 +1395,10 @@ mod tests {
         assert_eq!(room.maps["battle"]["items"][0]["name"], "Поле");
         assert_eq!(room.maps["battle"]["items"][0]["published"], true);
         assert_eq!(room.active_map.as_deref(), Some("battle"));
-        assert_eq!(room.active_map_id.as_deref(), Some(room.maps["battle"]["items"][0]["id"].as_str().unwrap()));
+        assert_eq!(
+            room.active_map_id.as_deref(),
+            Some(room.maps["battle"]["items"][0]["id"].as_str().unwrap())
+        );
         assert_eq!(room.tokens.len(), 1);
         assert_eq!(room.tokens[0]["hp"], 7);
     }

@@ -54,7 +54,11 @@ pub fn validate(entities: &[Entity]) -> Validation {
                 }
                 _ => "",
             };
-            let name = if entity.name.is_empty() { &entity.source_id } else { &entity.name };
+            let name = if entity.name.is_empty() {
+                &entity.source_id
+            } else {
+                &entity.name
+            };
             warnings.push(format!(
                 "У сцены «{name}» нет картинки{detail} — она попадёт в игру пустой.{hint}"
             ));
@@ -84,5 +88,9 @@ pub fn validate(entities: &[Entity]) -> Validation {
         }
     }
 
-    Validation { warnings, image_bytes, counts }
+    Validation {
+        warnings,
+        image_bytes,
+        counts,
+    }
 }

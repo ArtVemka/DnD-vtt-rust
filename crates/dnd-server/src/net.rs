@@ -35,7 +35,9 @@ mod tests {
 
     #[tokio::test]
     async fn busy_port_is_skipped() {
-        let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0))
+            .await
+            .unwrap();
         let busy = listener.local_addr().unwrap().port();
         assert!(!is_port_free(busy).await);
     }

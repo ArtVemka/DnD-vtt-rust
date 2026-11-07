@@ -1,8 +1,8 @@
 //! Replays `fixtures/dice.json`, generated from the JS reference by
 //! `tools/gen-dice-fixtures.js`. Any behaviour drift fails here first.
 
-use dnd_core::dice::{parse_formula, roll_formula, Roll};
-use serde_json::{json, Value};
+use dnd_core::dice::{Roll, parse_formula, roll_formula};
+use serde_json::{Value, json};
 
 const FIXTURES: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -54,10 +54,7 @@ fn dice_matches_js_reference() {
                     "parse mismatch for {input:?}"
                 );
                 let roll_expected = &case["roll"];
-                assert!(
-                    !roll_expected.is_null(),
-                    "JS expected a roll for {input:?}"
-                );
+                assert!(!roll_expected.is_null(), "JS expected a roll for {input:?}");
                 let sequence: Vec<u32> = case["sequence"]
                     .as_array()
                     .expect("sequence")

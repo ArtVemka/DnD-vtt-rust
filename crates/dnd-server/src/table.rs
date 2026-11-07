@@ -1,4 +1,4 @@
-﻿//! Realtime table: identity resolution, rooms, the join handshake.
+//! Realtime table: identity resolution, rooms, the join handshake.
 //!
 //! The server binds loopback only, so the host key is the real gate for the DM
 //! role; the reference additionally checked the handshake address, which has no
@@ -9,10 +9,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use dnd_core::campaign::CampaignStore;
-use dnd_core::room::{RoomState, Viewer, DM_PLAYER_ID, ROLE_DM, ROLE_PLAYER};
-use serde_json::{json, Value};
-use socketioxide::extract::{AckSender, Data, SocketRef};
+use dnd_core::room::{DM_PLAYER_ID, ROLE_DM, ROLE_PLAYER, RoomState, Viewer};
+use serde_json::{Value, json};
 use socketioxide::SocketIo;
+use socketioxide::extract::{AckSender, Data, SocketRef};
 use uuid::Uuid;
 
 use crate::auth::{safe_equal, sanitize_name};
@@ -25,7 +25,9 @@ pub enum JoinError {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum JoinOutcome {
-    Dm { name: String },
+    Dm {
+        name: String,
+    },
     Player {
         name: String,
         player_id: String,
@@ -47,7 +49,11 @@ fn random_player_key() -> String {
 }
 
 /// Decides who is joining, before any state is mutated.
-pub fn resolve_join(room: &RoomState, data: &Value, host_key: &str) -> Result<JoinOutcome, JoinError> {
+pub fn resolve_join(
+    room: &RoomState,
+    data: &Value,
+    host_key: &str,
+) -> Result<JoinOutcome, JoinError> {
     let name = sanitize_name(data.get("name").unwrap_or(&Value::Null));
     if name.is_empty() {
         return Err(JoinError::EmptyName);
@@ -89,7 +95,10 @@ pub fn resolve_join(room: &RoomState, data: &Value, host_key: &str) -> Result<Jo
         String::new()
     };
     if let Some(existing) = room.players.get(&wanted) {
-        let existing_key = existing.get("playerKey").and_then(Value::as_str).unwrap_or("");
+        let existing_key = existing
+            .get("playerKey")
+            .and_then(Value::as_str)
+            .unwrap_or("");
         if !existing_key.is_empty() {
             if !safe_equal(&provided_key, existing_key) {
                 return Err(JoinError::IdentityDenied(
@@ -200,17 +209,15 @@ pub fn create_io(table: Arc<Table>) -> (socketioxide::layer::SocketIoLayer, Sock
         .build_layer();
 
     let connect_table = table.clone();
-    io.ns(
-        "/",
-        move |socket: SocketRef, Data(_auth): Data<Value>| {
-            let table = connect_table.clone();
-            async move { on_connect(socket, table).await }
-        },
-    );
+    io.ns("/", move |socket: SocketRef, Data(_auth): Data<Value>| {
+        let table = connect_table.clone();
+        async move { on_connect(socket, table).await }
+    });
     (layer, io)
 }
 
 async fn on_connect(socket: SocketRef, table: Arc<Table>) {
+    crate::handlers::register(&socket, table.clone());
     {
         let join_table = table.clone();
         socket.on(
@@ -263,7 +270,12 @@ async fn handle_join_room(
             let mut room = table.room.lock().unwrap();
             room.add_dm(&name);
             room.attach_socket(DM_PLAYER_ID, &socket.id.to_string());
-            (ROLE_DM.to_string(), DM_PLAYER_ID.to_string(), String::new(), name)
+            (
+                ROLE_DM.to_string(),
+                DM_PLAYER_ID.to_string(),
+                String::new(),
+                name,
+            )
         }
         Ok(JoinOutcome::Player {
             name,
@@ -277,7 +289,10 @@ async fn handle_join_room(
         }
         Err(JoinError::EmptyName) => {
             let _ = ack.send(&json!({ "ok": false, "error": "Имя не может быть пустым" }));
-            let _ = socket.emit("errorMessage", &json!({ "message": "Имя не может быть пустым" }));
+            let _ = socket.emit(
+                "errorMessage",
+                &json!({ "message": "Имя не может быть пустым" }),
+            );
             return;
         }
         Err(JoinError::IdentityDenied(message)) => {
@@ -318,7 +333,11 @@ async fn handle_join_room(
 }
 
 async fn handle_disconnect(socket: SocketRef, io: SocketIo, table: Arc<Table>) {
-    let session = table.sessions.lock().unwrap().remove(&socket.id.to_string());
+    let session = table
+        .sessions
+        .lock()
+        .unwrap()
+        .remove(&socket.id.to_string());
     let Some(session) = session else {
         return;
     };
@@ -331,7 +350,7 @@ async fn handle_disconnect(socket: SocketRef, io: SocketIo, table: Arc<Table>) {
     broadcast_players(&io, &table).await;
 }
 
-async fn broadcast_players(io: &SocketIo, table: &Arc<Table>) {
+pub(crate) async fn broadcast_players(io: &SocketIo, table: &Arc<Table>) {
     let players_view = table.player_list(false);
     let _ = io
         .within("table")
@@ -357,8 +376,17 @@ mod tests {
     #[test]
     fn host_key_opens_the_dm_role() {
         let room = RoomState::new(campaign());
-        let outcome = resolve_join(&room, &json!({ "name": "Мастер", "hostKey": "secret" }), "secret");
-        assert_eq!(outcome, Ok(JoinOutcome::Dm { name: "Мастер".into() }));
+        let outcome = resolve_join(
+            &room,
+            &json!({ "name": "Мастер", "hostKey": "secret" }),
+            "secret",
+        );
+        assert_eq!(
+            outcome,
+            Ok(JoinOutcome::Dm {
+                name: "Мастер".into()
+            })
+        );
     }
 
     #[test]
@@ -373,8 +401,16 @@ mod tests {
     #[test]
     fn wrong_key_makes_a_fresh_player() {
         let room = RoomState::new(campaign());
-        match resolve_join(&room, &json!({ "name": "Гость", "hostKey": "bad" }), "secret") {
-            Ok(JoinOutcome::Player { name, player_id, player_key }) => {
+        match resolve_join(
+            &room,
+            &json!({ "name": "Гость", "hostKey": "bad" }),
+            "secret",
+        ) {
+            Ok(JoinOutcome::Player {
+                name,
+                player_id,
+                player_key,
+            }) => {
                 assert_eq!(name, "Гость");
                 assert!(player_id.starts_with("p-"));
                 assert_eq!(player_key.len(), 48);
@@ -386,8 +422,12 @@ mod tests {
     #[test]
     fn reserved_dm_id_is_denied() {
         let room = RoomState::new(campaign());
-        let error = resolve_join(&room, &json!({ "name": "Хитрец", "playerId": "dm" }), "secret")
-            .unwrap_err();
+        let error = resolve_join(
+            &room,
+            &json!({ "name": "Хитрец", "playerId": "dm" }),
+            "secret",
+        )
+        .unwrap_err();
         assert_eq!(
             error,
             JoinError::IdentityDenied("Это код мастера. Войдём заново под своим кодом.")
@@ -399,7 +439,11 @@ mod tests {
         let mut room = RoomState::new(campaign());
         room.add_player("p-hero", "Герой", "aabbcc");
         assert!(matches!(
-            resolve_join(&room, &json!({ "name": "Герой", "playerId": "p-hero", "playerKey": "wrong" }), "secret"),
+            resolve_join(
+                &room,
+                &json!({ "name": "Герой", "playerId": "p-hero", "playerKey": "wrong" }),
+                "secret"
+            ),
             Err(JoinError::IdentityDenied(_))
         ));
         let outcome = resolve_join(
@@ -424,12 +468,20 @@ mod tests {
         room.add_player("p-hero", "Герой", "");
         room.attach_socket("p-hero", "s1");
         assert!(matches!(
-            resolve_join(&room, &json!({ "name": "Вор", "playerId": "p-hero" }), "secret"),
+            resolve_join(
+                &room,
+                &json!({ "name": "Вор", "playerId": "p-hero" }),
+                "secret"
+            ),
             Err(JoinError::IdentityDenied(_))
         ));
         room.detach_socket("p-hero", "s1");
         assert!(matches!(
-            resolve_join(&room, &json!({ "name": "Герой", "playerId": "p-hero" }), "secret"),
+            resolve_join(
+                &room,
+                &json!({ "name": "Герой", "playerId": "p-hero" }),
+                "secret"
+            ),
             Ok(JoinOutcome::Player { .. })
         ));
     }
@@ -437,7 +489,12 @@ mod tests {
     #[test]
     fn invalid_ids_are_replaced() {
         let room = RoomState::new(campaign());
-        let outcome = resolve_join(&room, &json!({ "name": "Игрок", "playerId": "x" }), "secret").unwrap();
+        let outcome = resolve_join(
+            &room,
+            &json!({ "name": "Игрок", "playerId": "x" }),
+            "secret",
+        )
+        .unwrap();
         assert!(matches!(outcome, JoinOutcome::Player { .. }));
         if let JoinOutcome::Player { player_id, .. } = outcome {
             assert!(player_id.starts_with("p-"));
@@ -452,4 +509,3 @@ mod tests {
         assert!(!valid_player_id(&"a".repeat(65)));
     }
 }
-

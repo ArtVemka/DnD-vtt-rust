@@ -71,9 +71,14 @@ pub fn plan_for(entity: &Entity, free_slots: &[String]) -> Plan {
         let has_image = entity.image.is_some();
         let selectable = slot.is_some() && has_image;
         let note = if slot.is_none() {
-            "В игре заняты все три вкладки карт — освободите одну, чтобы импортировать сцену".to_string()
+            "В игре заняты все три вкладки карт — освободите одну, чтобы импортировать сцену"
+                .to_string()
         } else if !has_image {
-            if entity.image_error.as_ref().is_some_and(|error| mentions_foundry(&error.reason)) {
+            if entity
+                .image_error
+                .as_ref()
+                .is_some_and(|error| mentions_foundry(&error.reason))
+            {
                 "Картинка лежит в файлах Foundry, а в выгрузке её нет — выгрузите приключение из Foundry".to_string()
             } else {
                 "У сцены нет подходящей картинки, а без неё карта будет пустой".to_string()
@@ -138,13 +143,15 @@ pub fn build_plans(entities: &[Entity], campaign_maps: &Value) -> Built {
                 return false;
             };
             js::truthy(slot)
-                && js::get(slot, "items").is_some_and(|items| {
-                    items.as_array().is_some_and(|items| items.is_empty())
-                })
+                && js::get(slot, "items")
+                    .is_some_and(|items| items.as_array().is_some_and(|items| items.is_empty()))
         })
         .map(|map_type| (*map_type).to_string())
         .collect();
-    let plans: Vec<Plan> = entities.iter().map(|entity| plan_for(entity, &free_slots)).collect();
+    let plans: Vec<Plan> = entities
+        .iter()
+        .map(|entity| plan_for(entity, &free_slots))
+        .collect();
     Built { plans, free_slots }
 }
 
@@ -173,7 +180,11 @@ fn now_millis() -> u64 {
 /// Счётчик нужен, чтобы в пределах одной импортации не совпали два «note-1».
 pub fn next_id(prefix: &str) -> String {
     let counter = COUNTER.fetch_add(1, Ordering::SeqCst) + 1;
-    format!("{prefix}-{}-{}", js::base36(counter), js::base36(now_millis()))
+    format!(
+        "{prefix}-{}-{}",
+        js::base36(counter),
+        js::base36(now_millis())
+    )
 }
 
 /// `new Date().toISOString()`.
@@ -214,7 +225,11 @@ fn slot_items_mut<'a>(maps: &'a mut Map<String, Value>, slot: &str) -> Option<&'
     let entry = maps
         .entry(slot.to_string())
         .or_insert_with(|| json!({ "items": [], "activeId": null }));
-    entry.as_object_mut()?.entry("items").or_insert_with(|| json!([])).as_array_mut()
+    entry
+        .as_object_mut()?
+        .entry("items")
+        .or_insert_with(|| json!([]))
+        .as_array_mut()
 }
 
 pub struct MapContext<'a> {
@@ -371,19 +386,35 @@ pub fn map_to_campaign(plans: &[Plan], context: MapContext<'_>) -> Mapped {
                     entry.insert("id".to_string(), Value::String(next_id("wall")));
                     entry.insert(
                         "x1".to_string(),
-                        Value::from(to_fraction(Some(js::number_or_zero(Some(&parts[0]))), None, scene_width)),
+                        Value::from(to_fraction(
+                            Some(js::number_or_zero(Some(&parts[0]))),
+                            None,
+                            scene_width,
+                        )),
                     );
                     entry.insert(
                         "y1".to_string(),
-                        Value::from(to_fraction(Some(js::number_or_zero(Some(&parts[1]))), None, scene_height)),
+                        Value::from(to_fraction(
+                            Some(js::number_or_zero(Some(&parts[1]))),
+                            None,
+                            scene_height,
+                        )),
                     );
                     entry.insert(
                         "x2".to_string(),
-                        Value::from(to_fraction(Some(js::number_or_zero(Some(&parts[2]))), None, scene_width)),
+                        Value::from(to_fraction(
+                            Some(js::number_or_zero(Some(&parts[2]))),
+                            None,
+                            scene_width,
+                        )),
                     );
                     entry.insert(
                         "y2".to_string(),
-                        Value::from(to_fraction(Some(js::number_or_zero(Some(&parts[3]))), None, scene_height)),
+                        Value::from(to_fraction(
+                            Some(js::number_or_zero(Some(&parts[3]))),
+                            None,
+                            scene_height,
+                        )),
                     );
                     if js::get(wall, "door").is_some_and(js::truthy) {
                         // ds: 0 закрыта, 1 открыта, 2 заперта (и секретная дверь тоже).
@@ -470,7 +501,11 @@ pub fn map_to_campaign(plans: &[Plan], context: MapContext<'_>) -> Mapped {
                     row.insert("id".to_string(), Value::String(next_id("row")));
                     row.insert(
                         "label".to_string(),
-                        Value::String(label.map(js::string).unwrap_or_else(|| "Строка".to_string())),
+                        Value::String(
+                            label
+                                .map(js::string)
+                                .unwrap_or_else(|| "Строка".to_string()),
+                        ),
                     );
                     row.insert("weight".to_string(), weight);
                     if !range.is_empty() {
@@ -514,7 +549,11 @@ pub fn map_to_campaign(plans: &[Plan], context: MapContext<'_>) -> Mapped {
                 .cloned()
                 .unwrap_or(Value::Null);
             let actor_type = raw_string(entity, "type");
-            let actor_type = if actor_type.is_empty() { "npc".to_string() } else { actor_type };
+            let actor_type = if actor_type.is_empty() {
+                "npc".to_string()
+            } else {
+                actor_type
+            };
             adventure_object["actors"].as_array_mut().unwrap().push(json!({
                 "id": next_id("actor"),
                 "name": if entity.name.is_empty() { "Персонаж".to_string() } else { entity.name.clone() },

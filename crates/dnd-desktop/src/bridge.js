@@ -5,6 +5,13 @@
 
   const invoke = (command, args) => window.__TAURI__.core.invoke(command, args);
 
+  function listen(name, callback) {
+    const pending = window.__TAURI__.event.listen(name, (event) => callback(event.payload));
+    return () => {
+      pending.then((unlisten) => unlisten()).catch(() => {});
+    };
+  }
+
   async function call(command, args) {
     try {
       return await invoke(command, args);
@@ -16,11 +23,10 @@
   window.desktop = {
     isElectron: true,
     isAndroid: false,
-
     getConfig: () => call('app_config'),
     quitApp: () => call('app_quit'),
     setAutosaveInterval: (seconds) => call('app_autosave_interval', { seconds }),
-    setPresence: () => Promise.resolve({ ok: true }),
+    setPresence: (state) => call('presence_update', { input: state }),
     checkForUpdates: () => Promise.resolve({
       ok: false,
       error: 'Обновления появятся после настройки подписи сборки.'
@@ -42,13 +48,26 @@
     stopHost: () => call('host_stop'),
     hostStatus: () => call('host_status'),
 
+    irohStart: () => call('iroh_start'),
+    irohStop: () => call('iroh_stop'),
+    irohCreateTicket: () => call('iroh_create_ticket'),
+    irohTicketQr: (ticketStr) => call('iroh_ticket_qr', { ticketStr }),
+    irohTunnelClient: (ticketStr) => call('iroh_tunnel_client', { ticketStr }),
+    irohTunnelStop: () => call('iroh_tunnel_stop'),
+
     openDataDir: () => call('shell_open_data_dir'),
     openBackups: () => call('shell_open_backups'),
     openExternal: (url) => call('shell_open_external', { url }),
 
-    // Event channels exist in Electron; the Rust backend has no producer yet.
-    onCampaignSaved: () => () => {},
-    onCampaignError: () => () => {},
-    onHostLog: () => () => {}
+    openSheetWindow: (request) => call('sheet_open_window', { request }),
+    openJournalWindow: (request) => call('journal_open_window', { request }),
+
+    pickAdventureFile: () => call('adventure_pick_file'),
+    inspectAdventure: (filePath) => call('adventure_inspect', { filePath }),
+    importAdventure: (filePath, include) => call('adventure_import', { filePath, include }),
+
+    onCampaignSaved: (callback) => listen('campaign-saved', callback),
+    onCampaignError: (callback) => listen('campaign-error', callback),
+    onHostLog: (callback) => listen('host-log', callback)
   };
 })();

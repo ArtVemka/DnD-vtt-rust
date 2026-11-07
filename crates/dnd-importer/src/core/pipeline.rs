@@ -46,7 +46,10 @@ fn registry() -> &'static Mutex<Vec<Arc<dyn Adapter>>> {
 /// Регистрирует адаптер источника.
 pub fn register(adapter: Arc<dyn Adapter>) -> Result<(), ImportError> {
     if adapter.id().is_empty() {
-        return Err(import_error("adapter", "Адаптер должен иметь id, canHandle и extract"));
+        return Err(import_error(
+            "adapter",
+            "Адаптер должен иметь id, canHandle и extract",
+        ));
     }
     let mut adapters = registry().lock().expect("adapter registry is not poisoned");
     match adapters.iter_mut().find(|item| item.id() == adapter.id()) {
@@ -58,7 +61,10 @@ pub fn register(adapter: Arc<dyn Adapter>) -> Result<(), ImportError> {
 
 pub fn find_adapter(input: &Input<'_>) -> Result<Arc<dyn Adapter>, ImportError> {
     let adapters = registry().lock().expect("adapter registry is not poisoned");
-    let found = adapters.iter().find(|adapter| adapter.can_handle(input)).cloned();
+    let found = adapters
+        .iter()
+        .find(|adapter| adapter.can_handle(input))
+        .cloned();
     drop(adapters);
     found.ok_or_else(|| {
         import_error(
@@ -143,7 +149,11 @@ pub fn run_import(
         },
     );
 
-    let mut skipped: Vec<Value> = normalized.skipped.iter().map(|item| item.to_value()).collect();
+    let mut skipped: Vec<Value> = normalized
+        .skipped
+        .iter()
+        .map(|item| item.to_value())
+        .collect();
     skipped.extend(mapped.skipped);
 
     let report = build_report(ReportInput {
