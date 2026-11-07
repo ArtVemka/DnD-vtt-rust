@@ -1,0 +1,21 @@
+[package]
+name = "dnd-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+dnd-core = { path = "../dnd-core" }
+dnd-server = { path = "../dnd-server" }
+tauri = { version = "2", features = ["tray-icon"] }
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync"] }
+serde.workspace = true
+serde_json.workspace = true
+uuid = { version = "1", features = ["v4"] }
+rfd = "0.15"
+open = "5"
+chrono = { version = "0.4", features = ["clock"] }

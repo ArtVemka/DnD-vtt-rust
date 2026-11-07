@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DnD Table",
+  "version": "0.1.0",
+  "identifier": "ru.dndstol.app",
+  "build": {
+    "frontendDist": "../../renderer"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": ["icons/icon.ico"],
+    "resources": {
+      "../../renderer/": "renderer/"
+    }
+  }
+}

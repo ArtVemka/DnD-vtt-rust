@@ -14,8 +14,9 @@
 | Правила и геометрия (`dnd5e.js`) | в работе |
 | Листы, статблоки, приключения (`state.js`) | в работе |
 | Контракт событий Socket.IO | в работе |
-| Состояние стола, `joinRoom`, 140 событий | дальше |
-| Оболочка Tauri вместо Electron | дальше |
+| Состояние стола, `joinRoom`, вход DM/игрока | готово |
+| Оболочка Tauri 2: окно, трей, встроенный сервер, кампании | готово |
+| События стола (140 штук) | в работе |
 | Android | не трогаем, остаётся WebView-обёрткой |
 
 ## Структура
@@ -23,10 +24,28 @@
 ```
 crates/dnd-core     модель, правила, кости, хранилище
 crates/dnd-server   axum + socketioxide, раздача renderer/
+crates/dnd-desktop  Tauri 2: окно, трей, мост window.desktop
+crates/dnd-importer импорт архивов Foundry VTT
 renderer/           веб-слой, скопирован из E:\DnD без изменений
 fixtures/           эталонные данные, снятые с JS-реализации
 tools/              генераторы фикстур и паритет-проверки
 ```
+
+## Десктоп
+
+Данные берутся из `%APPDATA%\dnd-table`, поэтому кампании Electron-версии
+открываются сразу. Переопределение: переменная `DND_DATA`.
+
+```powershell
+$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+cargo run -p dnd-desktop              # окно с рендерером
+node tools/desktop-test.js            # полный цикл через живой webview
+npx @tauri-apps/cli@2 build           # MSI и NSIS в target\release\bundle
+```
+
+Закрытие окна сворачивает приложение в трей; выход — через трей или кнопку
+«Выход». Автосохранение по умолчанию раз в минуту, интервал меняется в
+настройках.
 
 ## Команды
 
