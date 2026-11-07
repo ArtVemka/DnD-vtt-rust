@@ -10,6 +10,8 @@
 
 pub mod campaign;
 pub mod dice;
+pub mod media;
 pub mod model;
 pub mod rules;
+pub mod session_log;
 pub mod sheet;

@@ -3,6 +3,8 @@
 //! Phase 1 is a protocol spike: serve the existing renderer and answer `ping`.
 //! Parity with `E:\DnD\server\socket.js` is checked by `tools/parity.js`.
 
+mod net;
+
 use axum::Router;
 use serde_json::{json, Value};
 use socketioxide::{
@@ -44,10 +46,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(CorsLayer::permissive())
         .layer(layer);
 
-    let port = std::env::var("DND_PORT")
-        .ok()
-        .and_then(|value| value.parse::<u16>().ok())
-        .unwrap_or(0);
+    let port = match std::env::var("DND_PORT").ok().and_then(|value| value.parse::<u16>().ok()) {
+        Some(port) => port,
+        None => net::find_free_port(32100, 64).await,
+    };
     let listener = tokio::net::TcpListener::bind(("127.0.0.1", port)).await?;
     println!("LISTENING {}", listener.local_addr()?);
     axum::serve(listener, app).await?;

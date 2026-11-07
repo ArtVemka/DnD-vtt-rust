@@ -17,7 +17,8 @@ use chrono::{SecondsFormat, Utc};
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-use crate::model::{empty_maps, sanitize_text, CAMPAIGN_FORMAT_VERSION};
+use crate::model::{empty_maps, CAMPAIGN_FORMAT_VERSION};
+use crate::sheet::sanitize_text;
 
 pub const MAX_FILES_BYTES: u64 = 512 * 1024 * 1024;
 const SWEEP_KEEP_MS: u64 = 2 * 60 * 1000;
