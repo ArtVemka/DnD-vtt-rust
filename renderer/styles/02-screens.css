@@ -1,0 +1,524 @@
+/* ==================================================================
+ * Экраны.
+ * Главный экран, вход в стол, подключение, модальные окна.
+ *
+ * Файл выделен из styles.css без перестановки правил: порядок в CSS значим
+ * для правил одинаковой специфичности. Части обязаны подключаться по
+ * порядку номеров в index.html.
+ * ================================================================== */
+
+/* ---------------------------------------------------------------- Экраны */
+
+.screen {
+  display: none;
+  height: 100%;
+}
+
+.screen.is-active {
+  display: block;
+}
+
+.screen--centered.is-active {
+  display: flex;
+  /*
+   * Центрируем через margin: auto у содержимого, а не через align-items:
+   * center. При align-items: center содержимое, которое выше окна, вылезает
+   * вверх, и верхняя часть (логотип с названием) не достаётся прокруткой.
+   * С margin: auto содержимое центрируется, пока есть место, и при нехватке
+   * места просто начинается сверху.
+   */
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px;
+  overflow: auto;
+}
+
+.screen--centered.is-active > * {
+  margin: auto;
+}
+
+.screen--table.is-active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Экран подготовки листа: лист плотный и длинный, поэтому он занимает окно
+   целиком и прокручивается сам, а не сидит в узком диалоге. */
+.screen--sheet.is-active {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: 100%;
+  min-height: 0;
+}
+
+.sheet-editor__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.sheet-editor__title {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.sheet-editor__status {
+  flex-shrink: 0;
+}
+
+.sheet-editor__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* На экране подготовки лист занимает всё окно, поэтому его собственная шапка
+   с заголовком лишняя: заголовок и кнопка сохранения стоят в панели сверху.
+   Аватар тоже: поставить его можно только на столе, файлы портретов живут
+   в кампании мастера, и кнопка без обработчика просто ничего не делала бы. */
+.sheet-editor__body .sheet__head,
+.sheet-editor__body .avatar-pick {
+  display: none;
+}
+
+/* Выбор листа на экране подключения. */
+.sheet-choice {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.sheet-choice__title {
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0 0 4px;
+}
+
+.sheet-choice__hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.sheet-choice__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-choice__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+}
+
+.sheet-choice__item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.sheet-choice__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sheet-choice__name {
+  font-family: var(--font-title);
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-choice__about {
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-choice__empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 6px 2px;
+}
+
+.sheet-choice__row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sheet-choice__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ------------------------------------------------------------- Главный экран */
+
+.home {
+  --home-accent: var(--accent);
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+}
+
+.home__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Герб: круг с гранью d20. Тонкая золотая обводка и холодное свечение. */
+.home__emblem {
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  border: 1px solid color-mix(in srgb, var(--gold) 52%, transparent);
+  border-radius: 50%;
+  color: var(--gold);
+  background: radial-gradient(circle at 50% 32%, var(--accent-soft), transparent 72%);
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--accent) 22%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--gold) 12%, transparent);
+}
+
+.home__emblem svg {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home__logo {
+  font-family: var(--font-fantasy);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--gold) 35%, transparent);
+}
+
+.home__title {
+  margin: 4px 0 0;
+  font-family: var(--font-title);
+  font-size: clamp(30px, 4.4vw, 54px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-shadow: 0 2px 8px color-mix(in srgb, var(--bg-deep) 70%, transparent);
+}
+
+.home__subtitle {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+}
+
+/* Две панели: мастер и игрок. Цвет обводки и свечения задаёт --home-accent,
+   поэтому одинаковые правила работают и для медного, и для синего раздела. */
+.home__groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px;
+  width: 100%;
+  max-width: 860px;
+  align-items: stretch;
+}
+
+.home__group {
+  --home-accent: var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px 24px;
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--home-accent) 28%, var(--border));
+  border-radius: 18px;
+  box-shadow:
+    0 24px 60px color-mix(in srgb, var(--bg-deep) 62%, transparent),
+    inset 0 0 44px color-mix(in srgb, var(--home-accent) 5%, transparent);
+}
+
+.home__group--player {
+  --home-accent: var(--info);
+}
+
+.home__group__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding-bottom: 16px;
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.home__group-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  color: var(--home-accent);
+}
+
+.home__group-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home__cards {
+  display: grid;
+  gap: 14px;
+}
+
+/* Кнопка-пилюля: плоская заливка, тонкая обводка и свечение в цвет раздела. */
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 14px 20px;
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--home-accent) 38%, var(--border));
+  border-radius: 999px;
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-title);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--home-accent) 12%, transparent);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--home-accent);
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--home-accent) 38%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--home-accent) 16%, transparent);
+}
+
+.card--primary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--home-accent) 18%, var(--surface-2)),
+    color-mix(in srgb, var(--home-accent) 7%, var(--surface))
+  );
+}
+
+.card__title {
+  color: inherit;
+}
+
+.home__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.home__foot-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.home__foot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 18px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.home__foot-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.home__foot-icon {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+
+.home__foot-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home__mode {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.home__notice {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+  max-width: 640px;
+  margin: 0;
+}
+
+/* Звёздное поле: редкие точки поверх туманности. На светлом тоне не нужны. */
+.home-scene__stars {
+  background-image:
+    radial-gradient(1.6px 1.6px at 6% 14%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 14% 72%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 21% 38%, var(--gold) 50%, transparent 51%),
+    radial-gradient(1.1px 1.1px at 29% 86%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.7px 1.7px at 37% 22%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 44% 58%, var(--gold) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 52% 92%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.1px 1.1px at 59% 34%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 66% 68%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.3px 1.3px at 73% 12%, var(--gold) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 81% 52%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.1px 1.1px at 88% 78%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 94% 28%, var(--gold) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 10% 48%, var(--text) 50%, transparent 51%),
+    radial-gradient(1.3px 1.3px at 48% 8%, var(--text) 50%, transparent 51%);
+  opacity: 0.55;
+}
+
+[data-tone='light'] .home-scene__stars {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .home__groups {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+/* ----------------------------------------------------------------- Диалоги */
+
+.dialog {
+  width: 100%;
+  max-width: 560px;
+  background: linear-gradient(170deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 26px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+.dialog--wide {
+  max-width: 900px;
+}
+
+.dialog__back {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
+.dialog__title {
+  font-size: 24px;
+}
+
+.dialog__text {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.dialog__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.status {
+  min-height: 18px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.status--error {
+  color: var(--danger-text);
+}
+
+.status--ok {
+  color: var(--ok);
+}

@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http: https:; media-src 'self' http://127.0.0.1:* http://localhost:*; connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*; font-src 'self' data:;"
+    />
+    <title>D&amp;D Стол</title>
+    <script src="theme.js"></script>
+    <script src="sound.js"></script>
+    <!-- Шрифты подключаются раньше стилей: иначе первый кадр рисуется
+         запасным шрифтом и дёргается, когда приходит настоящий. -->
+    <link rel="stylesheet" href="fonts/fonts.css" />
+    <!-- Оформление разбито на части по порядку номеров: CSS зависит
+         от порядка правил одинаковой специфичности, и перестановка частей
+         молча изменила бы вид. Правится файл целиком, читается по части. -->
+    <link rel="stylesheet" href="styles/01-tokens.css" />
+    <link rel="stylesheet" href="styles/02-screens.css" />
+    <link rel="stylesheet" href="styles/03-controls.css" />
+    <link rel="stylesheet" href="styles/04-layout.css" />
+    <link rel="stylesheet" href="styles/05-map.css" />
+    <link rel="stylesheet" href="styles/06-panels.css" />
+    <link rel="stylesheet" href="styles/07-sheet.css" />
+    <link rel="stylesheet" href="styles/08-theme-layer.css" />
+    <link rel="stylesheet" href="styles/09-theme-studio.css" />
+    <link rel="stylesheet" href="styles/10-perf-mode.css" />
+    <link rel="stylesheet" href="styles/11-authentic.css" />
+  </head>
+  <body>
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+    <!-- ================= Экран 1: главный ================= -->
+    <section id="screen-home" class="screen screen--centered is-active">
+      <div class="home-scene" aria-hidden="true">
+        <span class="home-scene__sky"></span>
+        <span class="home-scene__far"></span>
+        <span class="home-scene__mid"></span>
+        <span class="home-scene__near"></span>
+        <span class="home-scene__stars"></span>
+        <span class="home-scene__particles">
+          <i></i><i></i><i></i><i></i><i></i><i></i>
+        </span>
+      </div>
+      <div class="home">
+        <div class="home__brand">
+          <div class="home__emblem" aria-hidden="true">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-d20"/></svg>
+          </div>
+          <div class="home__logo">D&amp;D</div>
+          <h1 class="home__title">Virtual Tabletop</h1>
+          <p class="home__subtitle">
+            D&amp;D 5e (2014) · игра напрямую через P2P
+          </p>
+        </div>
+
+        <div class="home__groups">
+          <section class="home__group home__group--dm">
+            <h2 class="home__group__title">
+              <span class="home__group-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-shield"/></svg>
+              </span>
+              <span>Раздел мастера</span>
+            </h2>
+            <div class="home__cards">
+              <button id="btn-go-create" class="card card--primary" type="button">
+                <span class="card__title">Создать новую кампанию</span>
+              </button>
+
+              <button id="btn-go-load" class="card" type="button">
+                <span class="card__title">Загрузить кампанию</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="home__group home__group--player">
+            <h2 class="home__group__title">
+              <span class="home__group-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-swords"/></svg>
+              </span>
+              <span>Раздел игрока</span>
+            </h2>
+            <div class="home__cards">
+              <button id="btn-go-join" class="card card--primary" type="button">
+                <span class="card__title">Подключиться к столу</span>
+              </button>
+
+              <button id="btn-go-sheet" class="card" type="button">
+                <span class="card__title">Создать лист персонажа</span>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <div class="home__footer">
+          <div class="home__foot-actions">
+            <button id="btn-settings-home" class="home__foot-btn" type="button">
+              <span class="home__foot-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-gear"/></svg>
+              </span>
+              <span>Настройки</span>
+            </button>
+            <button id="btn-exit" class="home__foot-btn" type="button">Выход</button>
+          </div>
+          <span id="home-datadir" class="home__mode">…</span>
+        </div>
+        <p class="muted home__notice">
+          Общей сети не нужно: игроки подключаются напрямую к мастеру по P2P-билету
+          через iroh. Приложение само пробивает NAT, а если не выйдет, идёт через
+          публичный relay. VPN и проброс портов не требуются.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= Экран 2: создание кампании ================= -->
+    <section id="screen-create" class="screen screen--centered">
+      <div class="dialog">
+        <button class="btn btn--ghost dialog__back" data-back type="button">← Назад</button>
+        <h2 class="dialog__title">Новая кампания</h2>
+        <p class="dialog__text">
+          Кампания сохраняется на этом компьютере: файл состояния и все загруженные изображения.
+        </p>
+        <label class="field">
+          <span class="field__label">Название кампании</span>
+          <input id="create-name" class="field__input" type="text" maxlength="60" placeholder="Например, «Проклятие Страда»" />
+        </label>
+        <div class="dialog__actions">
+          <button id="btn-create-start" class="btn btn--accent" type="button">Создать и запустить стол</button>
+        </div>
+        <div id="create-status" class="status"></div>
+      </div>
+    </section>
+
+    <!-- ================= Экран 3: загрузка кампании ================= -->
+    <section id="screen-load" class="screen screen--centered">
+      <div class="dialog dialog--wide">
+        <button class="btn btn--ghost dialog__back" data-back type="button">← Назад</button>
+        <h2 class="dialog__title">Сохранённые кампании</h2>
+        <div id="campaign-list" class="campaign-list"></div>
+        <div class="inline-row load-actions">
+          <button id="btn-import-campaign" class="btn btn--ghost" type="button">Импортировать папку кампании</button>
+        </div>
+        <div id="load-selected" class="load-selected" hidden>
+          <div class="load-selected__info">
+            <div class="load-selected__name" id="load-selected-name"></div>
+            <div class="muted" id="load-selected-meta"></div>
+          </div>
+          <button id="btn-start-loaded" class="btn btn--accent" type="button">Запустить стол</button>
+        </div>
+        <div id="load-status" class="status"></div>
+      </div>
+    </section>
+
+    <!-- ================= Экран 5: подключение игрока ================= -->
+    <section id="screen-join" class="screen screen--centered">
+      <div class="dialog">
+        <button class="btn btn--ghost dialog__back" data-back type="button">← Назад</button>
+        <h2 class="dialog__title">Подключение к столу</h2>
+        <p class="dialog__text">
+          Вставьте P2P-билет, который прислал мастер. Общая сеть, VPN и проброс
+          портов не нужны: соединение идёт напрямую между вашими компьютерами.
+        </p>
+        <label class="field">
+          <span class="field__label">P2P-билет от мастера</span>
+          <input id="join-p2p-ticket" class="field__input" type="text" placeholder="endpoint…" />
+        </label>
+        <button id="btn-paste-ticket" class="btn btn--ghost btn--tiny" type="button" hidden>
+          Вставить из буфера
+        </button>
+        <button id="btn-scan-ticket" class="btn btn--ghost btn--tiny" type="button" hidden>
+          Сканировать QR
+        </button>
+        <label class="field">
+          <span class="field__label">Ваше имя</span>
+          <input id="join-name" class="field__input" type="text" maxlength="40" placeholder="Как вас видеть за столом" />
+        </label>
+        <div class="dialog__actions">
+          <button id="btn-join-p2p" class="btn btn--accent" type="button">Подключиться по P2P</button>
+        </div>
+        <div id="join-status" class="status"></div>
+
+        <div class="sheet-choice">
+          <h3 class="sheet-choice__title">Ваш лист персонажа</h3>
+          <p class="sheet-choice__hint" id="sheet-choice-hint">
+            Выберите, кого взять на стол. Лист отправится мастеру один раз при
+            подключении и станет вашим листом на этом столе.
+          </p>
+          <ul id="join-sheets" class="sheet-choice__list"></ul>
+          <div class="sheet-choice__actions">
+            <button id="btn-join-new-sheet" class="btn" type="button">Создать новый лист</button>
+            <button id="btn-join-edit-sheet" class="btn btn--ghost" type="button" hidden>Править выбранный</button>
+          </div>
+        </div>
+
+        <p class="muted">
+          Нужен доступ в интернет: iroh использует relay и discovery n0. Также
+          разрешите приложению доступ к сети в брандмауэре Windows.
+        </p>
+        <p class="muted">
+          Листы хранятся на этом компьютере и никуда не отправляются, пока вы сами
+          не выберете, кого взять на стол.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ Экран 5: подготовка листа персонажа без стола ============ -->
+    <section id="screen-sheet" class="screen screen--sheet">
+      <div class="sheet-editor">
+        <div class="sheet-editor__bar">
+          <button id="btn-sheet-back" class="btn btn--ghost" type="button">← Назад</button>
+          <h2 class="sheet-editor__title">Лист персонажа</h2>
+          <button id="btn-sheet-save" class="btn btn--accent" type="button">Сохранить лист</button>
+        </div>
+        <div id="sheet-editor-status" class="status sheet-editor__status"></div>
+        <div id="sheet-editor-root" class="sheet-editor__body"></div>
+      </div>
+    </section>
+
+    <!-- ================= Экраны 4 и 6: общий стол ================= -->
+    <section id="screen-table" class="screen screen--table">
+      <header class="topbar">
+        <div class="topbar__left">
+          <button id="btn-leave" class="btn btn--ghost" type="button">← Выйти</button>
+          <button id="btn-panel-left" class="btn btn--ghost btn--tiny" type="button"
+                  aria-label="Панель участников">◀</button>
+          <div class="topbar__titles">
+            <div id="table-campaign" class="topbar__title">Кампания</div>
+            <div id="table-sub" class="topbar__sub muted">—</div>
+          </div>
+        </div>
+        <div class="topbar__right">
+          <span id="game-time" class="badge badge--muted" title="Время в игре">1 января 1 г., 08:00</span>
+          <button id="btn-game-rest" class="btn btn--ghost btn--tiny" type="button"
+                  title="Долгий отдых всей партии: лечение и +8 часов" hidden>Отдых</button>
+          <button id="timer-chip" class="btn btn--ghost btn--tiny" type="button"
+                  title="Обратный отсчёт: запустить таймер" hidden>⏱</button>
+          <span id="conn-badge" class="badge badge--net" title="Связь со столом"></span>
+          <span id="role-badge" class="badge">—</span>
+          <div class="topbar__tools" role="group" aria-label="Инструменты стола">
+            <button id="btn-search" class="btn btn--ghost btn--tiny btn--icon" type="button"
+                    title="Поиск по кампании (Ctrl+K)" aria-label="Поиск"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-magnifier"/></svg><span class="btn__label">Поиск</span></button>
+            <button id="btn-undo" class="btn btn--ghost btn--tiny btn--icon" type="button"
+                    title="Отменить последнее действие мастера" aria-label="Отменить" hidden><span class="btn__label">Отменить</span></button>
+            <button id="btn-panel-right" class="btn btn--ghost btn--tiny" type="button"
+                    aria-label="Панель стола">▸</button>
+            <button id="btn-settings-table" class="btn btn--ghost btn--tiny btn--icon" type="button"
+                    title="Настройки" aria-label="Настройки"><span class="btn__label">Настройки</span></button>
+          </div>
+          <div class="topbar__tools topbar__tools--actions" role="group" aria-label="Кампания">
+            <button id="btn-save-campaign" class="btn btn--ghost" type="button">Сохранить кампанию</button>
+            <button id="btn-stop-host" class="btn btn--danger btn--ghost" type="button">Остановить стол</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="col col--left">
+          <div class="panel" data-panel="participants">
+            <div class="panel__title">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-helm"/></svg></span>
+              <span class="panel__title-text">Участники</span>
+            </div>
+            <div id="players-root"></div>
+          </div>
+
+          <div class="panel" id="calendar-panel" data-panel="calendar">
+            <div class="panel__title panel__title--row">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-candle"/></svg></span>
+              <span class="panel__title-text">Календарь</span>
+              <button id="btn-calendar-add" class="btn btn--ghost btn--tiny" type="button" hidden>Событие</button>
+            </div>
+            <div id="calendar-events" class="calendar-events"></div>
+          </div>
+
+          <div class="panel" id="party-notes-panel" data-panel="notes">
+            <div class="panel__title panel__title--row">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-quill"/></svg></span>
+              <span class="panel__title-text">Заметки партии</span>
+              <span id="party-notes-status" class="muted"></span>
+            </div>
+            <textarea id="party-notes" class="input party-notes__text" rows="6" maxlength="20000"
+                      placeholder="Что партия записала: имена, договорённости, планы…"></textarea>
+            <button id="btn-party-notes-save" class="btn btn--ghost btn--tiny" type="button">Сохранить</button>
+          </div>
+
+          <div class="panel journal-panel" id="journal-panel" data-panel="journal" hidden>
+            <div class="panel__title panel__title--row">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-scroll"/></svg></span>
+              <span class="panel__title-text">Журнал</span>
+              <button id="btn-journal-detach" class="btn btn--ghost btn--tiny" type="button">Открыть окно</button>
+            </div>
+            <div class="journal-panel__bar">
+              <button id="btn-journal-add" class="btn btn--ghost btn--tiny" type="button">Добавить</button>
+              <input id="journal-search" class="input journal-panel__search" type="search"
+                     placeholder="Поиск" aria-label="Поиск по журналу" />
+            </div>
+            <div id="journal-list" class="journal-list"></div>
+          </div>
+
+          <div class="panel inventory-panel" id="inventory-panel" data-panel="inventory" hidden>
+            <div class="panel__title panel__title--row">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-chest"/></svg></span>
+              <span class="panel__title-text">Общий склад</span>
+              <button id="btn-inventory-add" class="btn btn--ghost btn--tiny" type="button" hidden>Добавить</button>
+            </div>
+            <div id="inventory-list" class="inventory-list"></div>
+          </div>
+
+          <div class="panel roll-requests-panel" id="roll-requests-panel" data-panel="checks" hidden>
+            <div class="panel__title">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-shield"/></svg></span>
+              <span class="panel__title-text">Проверки</span>
+            </div>
+            <form id="roll-request-form" class="roll-request-form" hidden>
+              <input id="roll-request-label" class="input" type="text" maxlength="120"
+                     placeholder="Например, Скрытность" aria-label="Название проверки" />
+              <select id="roll-request-to" class="select" aria-label="Кому адресована проверка"></select>
+              <input id="roll-request-dc" class="input" type="number" min="1" max="40"
+                     placeholder="СЛ" aria-label="Сложность, необязательно" />
+              <input id="roll-request-formula" class="input" type="text" maxlength="40"
+                     placeholder="1d20 (необязательно)" aria-label="Формула броска" />
+              <button class="btn btn--ghost btn--tiny" type="submit">Попросить бросок</button>
+            </form>
+            <div id="roll-requests-list" class="roll-request-list"></div>
+          </div>
+
+          <div class="panel" id="addresses-panel">
+            <div class="panel__title panel__title--row">
+              <span class="panel__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-key"/></svg></span>
+              <span class="panel__title-text">Приглашение игроков</span>
+              <button id="addresses-toggle" class="btn btn--ghost btn--tiny" type="button" aria-expanded="true">Скрыть ▾</button>
+            </div>
+            <div id="addresses-summary" class="addr-summary muted" hidden></div>
+            <div id="addresses-root"></div>
+            <p class="hint">
+              Отправьте игрокам P2P-билет: они вставят его в приложении и
+              подключатся напрямую, без общей сети и VPN.
+            </p>
+            <div class="addr-actions">
+              <button id="btn-import-adventure" class="btn btn--ghost btn--tiny" type="button">
+                Импортировать приключение…
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <main class="col col--center">
+          <div id="map-root" class="panel panel--map"></div>
+        </main>
+
+        <!-- Разделитель правой колонки: тянуть его мышью удобнее, чем искать
+             ширину в настройках, а колонка с листом и фишками то узкая, то
+             широкая в зависимости от того, что мастер делает. -->
+        <div class="col-resizer col-resizer--right" id="resizer-right" role="separator"
+             aria-orientation="vertical" aria-label="Ширина правой панели" tabindex="0"></div>
+
+        <aside class="col col--right">
+          <div id="roll-request-banner" class="roll-request-banner" role="status" aria-live="polite" hidden></div>
+          <div id="reaction-banner" class="reaction-banner" role="status" aria-live="polite" hidden></div>
+          <div class="tabs" role="tablist" aria-label="Вкладки стола">
+            <button class="tabs__btn is-active" data-tab="chat" type="button" role="tab"
+                    id="tabbtn-chat" aria-controls="tab-chat" aria-selected="true" tabindex="0"
+                    aria-label="Чат" title="Чат">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-chat"/></svg></span><span class="tabs__label">Чат</span>
+            </button>
+            <button class="tabs__btn" data-tab="dice" type="button" role="tab"
+                    id="tabbtn-dice" aria-controls="tab-dice" aria-selected="false" tabindex="-1"
+                    aria-label="Кубики" title="Кубики">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-d20"/></svg></span><span class="tabs__label">Кубики</span>
+            </button>
+            <button class="tabs__btn tabs__btn--gap" data-tab="sheet" type="button" role="tab"
+                    id="tabbtn-sheet" aria-controls="tab-sheet" aria-selected="false" tabindex="-1"
+                    aria-label="Лист" title="Лист">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-scroll"/></svg></span><span class="tabs__label">Лист</span>
+            </button>
+            <button class="tabs__btn tabs__btn--gap" data-tab="tokens" type="button" role="tab"
+                    id="tabbtn-tokens" aria-controls="tab-tokens" aria-selected="false" tabindex="-1"
+                    aria-label="Фишки" title="Фишки">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-helm"/></svg></span><span class="tabs__label">Фишки</span>
+            </button>
+            <button class="tabs__btn" data-tab="initiative" type="button" role="tab"
+                    id="tabbtn-initiative" aria-controls="tab-initiative" aria-selected="false" tabindex="-1"
+                    aria-label="Порядок боя" title="Порядок боя">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-swords"/></svg></span><span class="tabs__label">Бой</span>
+            </button>
+            <button class="tabs__btn tabs__btn--dm tabs__btn--gap" data-tab="surface" type="button" role="tab"
+                    id="tabbtn-surface" aria-controls="tab-surface" aria-selected="false" tabindex="-1"
+                    hidden aria-label="Поверхность карты" title="Поверхность карты (только ДМ)">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-flame"/></svg></span><span class="tabs__label">Поверхность</span>
+            </button>
+            <button class="tabs__btn tabs__btn--compact tabs__btn--dm tabs__btn--gap" data-tab="adventure"
+                    type="button" role="tab" id="tabbtn-adventure" aria-controls="tab-adventure"
+                    aria-selected="false" tabindex="-1" hidden
+                    aria-label="Приключение" title="Приключение (только ДМ)">
+              <span class="tabs__icon" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-map"/></svg></span><span class="tabs__label">Приключение</span>
+            </button>
+          </div>
+          <div class="panel panel--tab is-active" id="tab-chat" role="tabpanel"
+               aria-labelledby="tabbtn-chat" tabindex="0"></div>
+          <div class="panel panel--tab" id="tab-dice" role="tabpanel"
+               aria-labelledby="tabbtn-dice" tabindex="0"></div>
+          <div class="panel panel--tab" id="tab-sheet" role="tabpanel"
+               aria-labelledby="tabbtn-sheet" tabindex="0"></div>
+          <div class="panel panel--tab" id="tab-tokens" role="tabpanel"
+               aria-labelledby="tabbtn-tokens" tabindex="0"></div>
+          <div class="panel panel--tab" id="tab-initiative" role="tabpanel"
+               aria-labelledby="tabbtn-initiative" tabindex="0"></div>
+          <div class="panel panel--tab" id="tab-surface" role="tabpanel"
+               aria-labelledby="tabbtn-surface" tabindex="0"></div>
+          <div class="panel panel--tab" id="tab-adventure" role="tabpanel"
+               aria-labelledby="tabbtn-adventure" tabindex="0"></div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="import-overlay" id="import-overlay" hidden>
+      <div class="dialog dialog--wide" role="dialog" aria-modal="true" aria-labelledby="import-title">
+        <h2 class="dialog__title" id="import-title">Импорт приключения</h2>
+        <p class="muted" id="import-summary">…</p>
+        <ul class="import-warnings" id="import-warnings" hidden></ul>
+        <div class="import-list" id="import-list"></div>
+        <div class="dialog__actions">
+          <label class="import-all">
+            <input type="checkbox" id="import-all" checked />
+            <span>Выбрать всё</span>
+          </label>
+          <button class="btn btn--ghost" id="import-cancel" type="button">Отмена</button>
+          <button class="btn btn--accent" id="import-apply" type="button">Импортировать</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/socket.io.min.js"></script>
+<script src="dnd5e.js"></script>
+<script src="dice.js"></script>
+<script src="sheet.js"></script>
+    <script src="icons.js"></script>
+    <script src="table.js"></script>
+    <script src="local-table.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

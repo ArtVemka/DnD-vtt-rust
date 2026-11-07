@@ -1,0 +1,15 @@
+//! Domain model and rules for the D&D table.
+//!
+//! Port of the JS reference in `E:\DnD`: `server/state.js`,
+//! `renderer/dnd5e.js`, `renderer/dice.js`.
+//!
+//! Normalizers take and return `serde_json::Value` on purpose: the JS code
+//! normalizes plain objects and the same JSON goes to the renderer, so keeping
+//! the boundary untyped matches the reference exactly. Typed views can be added
+//! later where the server needs structure.
+
+pub mod campaign;
+pub mod dice;
+pub mod model;
+pub mod rules;
+pub mod sheet;

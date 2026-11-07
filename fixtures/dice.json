@@ -1,0 +1,1248 @@
+[
+  {
+    "input": "d20",
+    "sequence": [
+      17
+    ],
+    "parse": {
+      "ok": true,
+      "source": "d20",
+      "normalized": "d20",
+      "count": 1,
+      "sides": 20,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "d20",
+      "count": 1,
+      "sides": 20,
+      "values": [
+        17
+      ],
+      "keptValues": [
+        17
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 17
+    }
+  },
+  {
+    "input": " d20 ",
+    "sequence": [
+      3
+    ],
+    "parse": {
+      "ok": true,
+      "source": "d20",
+      "normalized": "d20",
+      "count": 1,
+      "sides": 20,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "d20",
+      "count": 1,
+      "sides": 20,
+      "values": [
+        3
+      ],
+      "keptValues": [
+        3
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 3
+    }
+  },
+  {
+    "input": "D20",
+    "sequence": [
+      20
+    ],
+    "parse": {
+      "ok": true,
+      "source": "D20",
+      "normalized": "d20",
+      "count": 1,
+      "sides": 20,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "d20",
+      "count": 1,
+      "sides": 20,
+      "values": [
+        20
+      ],
+      "keptValues": [
+        20
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 20
+    }
+  },
+  {
+    "input": "2d6+3",
+    "sequence": [
+      1,
+      6
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2d6+3",
+      "normalized": "2d6+3",
+      "count": 2,
+      "sides": 6,
+      "keep": null,
+      "modifier": 3
+    },
+    "roll": {
+      "formula": "2d6+3",
+      "count": 2,
+      "sides": 6,
+      "values": [
+        1,
+        6
+      ],
+      "keptValues": [
+        1,
+        6
+      ],
+      "droppedValues": [],
+      "modifier": 3,
+      "result": 10
+    }
+  },
+  {
+    "input": "2d6-3",
+    "sequence": [
+      6,
+      6
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2d6-3",
+      "normalized": "2d6-3",
+      "count": 2,
+      "sides": 6,
+      "keep": null,
+      "modifier": -3
+    },
+    "roll": {
+      "formula": "2d6-3",
+      "count": 2,
+      "sides": 6,
+      "values": [
+        6,
+        6
+      ],
+      "keptValues": [
+        6,
+        6
+      ],
+      "droppedValues": [],
+      "modifier": -3,
+      "result": 9
+    }
+  },
+  {
+    "input": "4d6dl1",
+    "sequence": [
+      3,
+      6,
+      2,
+      5
+    ],
+    "parse": {
+      "ok": true,
+      "source": "4d6dl1",
+      "normalized": "4d6dl1",
+      "count": 4,
+      "sides": 6,
+      "keep": {
+        "mode": "dl",
+        "value": 1
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "4d6dl1",
+      "count": 4,
+      "sides": 6,
+      "values": [
+        3,
+        6,
+        2,
+        5
+      ],
+      "keptValues": [
+        6,
+        5,
+        3
+      ],
+      "droppedValues": [
+        2
+      ],
+      "modifier": 0,
+      "result": 14
+    }
+  },
+  {
+    "input": "4d6dh1",
+    "sequence": [
+      3,
+      6,
+      2,
+      5
+    ],
+    "parse": {
+      "ok": true,
+      "source": "4d6dh1",
+      "normalized": "4d6dh1",
+      "count": 4,
+      "sides": 6,
+      "keep": {
+        "mode": "dh",
+        "value": 1
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "4d6dh1",
+      "count": 4,
+      "sides": 6,
+      "values": [
+        3,
+        6,
+        2,
+        5
+      ],
+      "keptValues": [
+        5,
+        3,
+        2
+      ],
+      "droppedValues": [
+        6
+      ],
+      "modifier": 0,
+      "result": 10
+    }
+  },
+  {
+    "input": "2d20kh1",
+    "sequence": [
+      3,
+      6
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2d20kh1",
+      "normalized": "2d20kh1",
+      "count": 2,
+      "sides": 20,
+      "keep": {
+        "mode": "kh",
+        "value": 1
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "2d20kh1",
+      "count": 2,
+      "sides": 20,
+      "values": [
+        3,
+        6
+      ],
+      "keptValues": [
+        6
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 6
+    }
+  },
+  {
+    "input": "2d20kh1+7",
+    "sequence": [
+      11,
+      15
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2d20kh1+7",
+      "normalized": "2d20kh1+7",
+      "count": 2,
+      "sides": 20,
+      "keep": {
+        "mode": "kh",
+        "value": 1
+      },
+      "modifier": 7
+    },
+    "roll": {
+      "formula": "2d20kh1+7",
+      "count": 2,
+      "sides": 20,
+      "values": [
+        11,
+        15
+      ],
+      "keptValues": [
+        15
+      ],
+      "droppedValues": [],
+      "modifier": 7,
+      "result": 22
+    }
+  },
+  {
+    "input": "2d20kl1",
+    "sequence": [
+      3,
+      6
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2d20kl1",
+      "normalized": "2d20kl1",
+      "count": 2,
+      "sides": 20,
+      "keep": {
+        "mode": "kl",
+        "value": 1
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "2d20kl1",
+      "count": 2,
+      "sides": 20,
+      "values": [
+        3,
+        6
+      ],
+      "keptValues": [
+        3
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 3
+    }
+  },
+  {
+    "input": "3d8dh2",
+    "sequence": [
+      1,
+      8,
+      4
+    ],
+    "parse": {
+      "ok": true,
+      "source": "3d8dh2",
+      "normalized": "3d8dh2",
+      "count": 3,
+      "sides": 8,
+      "keep": {
+        "mode": "dh",
+        "value": 2
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "3d8dh2",
+      "count": 3,
+      "sides": 8,
+      "values": [
+        1,
+        8,
+        4
+      ],
+      "keptValues": [
+        1
+      ],
+      "droppedValues": [
+        4,
+        8
+      ],
+      "modifier": 0,
+      "result": 1
+    }
+  },
+  {
+    "input": "3d8kl2",
+    "sequence": [
+      1,
+      8,
+      4
+    ],
+    "parse": {
+      "ok": true,
+      "source": "3d8kl2",
+      "normalized": "3d8kl2",
+      "count": 3,
+      "sides": 8,
+      "keep": {
+        "mode": "kl",
+        "value": 2
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "3d8kl2",
+      "count": 3,
+      "sides": 8,
+      "values": [
+        1,
+        8,
+        4
+      ],
+      "keptValues": [
+        4,
+        1
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 5
+    }
+  },
+  {
+    "input": "1d4",
+    "sequence": [
+      4
+    ],
+    "parse": {
+      "ok": true,
+      "source": "1d4",
+      "normalized": "1d4",
+      "count": 1,
+      "sides": 4,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "1d4",
+      "count": 1,
+      "sides": 4,
+      "values": [
+        4
+      ],
+      "keptValues": [
+        4
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 4
+    }
+  },
+  {
+    "input": "50d6",
+    "sequence": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      1,
+      2
+    ],
+    "parse": {
+      "ok": true,
+      "source": "50d6",
+      "normalized": "50d6",
+      "count": 50,
+      "sides": 6,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "50d6",
+      "count": 50,
+      "sides": 6,
+      "values": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2
+      ],
+      "keptValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 171
+    }
+  },
+  {
+    "input": "d100",
+    "sequence": [
+      100
+    ],
+    "parse": {
+      "ok": true,
+      "source": "d100",
+      "normalized": "d100",
+      "count": 1,
+      "sides": 100,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "d100",
+      "count": 1,
+      "sides": 100,
+      "values": [
+        100
+      ],
+      "keptValues": [
+        100
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 100
+    }
+  },
+  {
+    "input": "d10+999",
+    "sequence": [
+      10
+    ],
+    "parse": {
+      "ok": true,
+      "source": "d10+999",
+      "normalized": "d10+999",
+      "count": 1,
+      "sides": 10,
+      "keep": null,
+      "modifier": 999
+    },
+    "roll": {
+      "formula": "d10+999",
+      "count": 1,
+      "sides": 10,
+      "values": [
+        10
+      ],
+      "keptValues": [
+        10
+      ],
+      "droppedValues": [],
+      "modifier": 999,
+      "result": 1009
+    }
+  },
+  {
+    "input": "d10-999",
+    "sequence": [
+      1
+    ],
+    "parse": {
+      "ok": true,
+      "source": "d10-999",
+      "normalized": "d10-999",
+      "count": 1,
+      "sides": 10,
+      "keep": null,
+      "modifier": -999
+    },
+    "roll": {
+      "formula": "d10-999",
+      "count": 1,
+      "sides": 10,
+      "values": [
+        1
+      ],
+      "keptValues": [
+        1
+      ],
+      "droppedValues": [],
+      "modifier": -999,
+      "result": -998
+    }
+  },
+  {
+    "input": "2 d 6 + 3",
+    "sequence": [
+      2,
+      4
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2 d 6 + 3",
+      "normalized": "2d6+3",
+      "count": 2,
+      "sides": 6,
+      "keep": null,
+      "modifier": 3
+    },
+    "roll": {
+      "formula": "2d6+3",
+      "count": 2,
+      "sides": 6,
+      "values": [
+        2,
+        4
+      ],
+      "keptValues": [
+        2,
+        4
+      ],
+      "droppedValues": [],
+      "modifier": 3,
+      "result": 9
+    }
+  },
+  {
+    "input": "2d6+1000",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Модуль должен быть от -999 до 999"
+    }
+  },
+  {
+    "input": "2d6-1000",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Модуль должен быть от -999 до 999"
+    }
+  },
+  {
+    "input": "d7",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Костей d7 не бывает. Доступны d4, d6, d8, d10, d12, d20, d100"
+    }
+  },
+  {
+    "input": "d0",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Костей d0 не бывает. Доступны d4, d6, d8, d10, d12, d20, d100"
+    }
+  },
+  {
+    "input": "d3",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Костей d3 не бывает. Доступны d4, d6, d8, d10, d12, d20, d100"
+    }
+  },
+  {
+    "input": "0d6",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Костей в броске должно быть от 1 до 50"
+    }
+  },
+  {
+    "input": "51d6",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Костей в броске должно быть от 1 до 50"
+    }
+  },
+  {
+    "input": "4d6dl5",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "«dl5» не имеет смысла при 4 костях в броске"
+    }
+  },
+  {
+    "input": "4d6kh0",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "«kh0» не имеет смысла при 4 костях в броске"
+    }
+  },
+  {
+    "input": "2d6+3x",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «2d6+3x». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "d",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «d». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "d6+",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «d6+». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "d6-",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «d6-». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Введите формулу броска, например 2d6+3"
+    }
+  },
+  {
+    "input": "   ",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Введите формулу броска, например 2d6+3"
+    }
+  },
+  {
+    "input": "2d6++3",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «2d6++3». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "-2d6",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «-2d6». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "d6kh",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «d6kh». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "2d6dl",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «2d6dl». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "2d6dlx",
+    "sequence": [],
+    "parse": {
+      "ok": false,
+      "error": "Не понял формулу «2d6dlx». Примеры: 2d6+3, 4d6dl1, d20, 2d20kh1"
+    }
+  },
+  {
+    "input": "2d6+3 4",
+    "sequence": [
+      2,
+      4
+    ],
+    "parse": {
+      "ok": true,
+      "source": "2d6+3 4",
+      "normalized": "2d6+34",
+      "count": 2,
+      "sides": 6,
+      "keep": null,
+      "modifier": 34
+    },
+    "roll": {
+      "formula": "2d6+34",
+      "count": 2,
+      "sides": 6,
+      "values": [
+        2,
+        4
+      ],
+      "keptValues": [
+        2,
+        4
+      ],
+      "droppedValues": [],
+      "modifier": 34,
+      "result": 40
+    }
+  },
+  {
+    "input": "20d100",
+    "sequence": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "parse": {
+      "ok": true,
+      "source": "20d100",
+      "normalized": "20d100",
+      "count": 20,
+      "sides": 100,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "20d100",
+      "count": 20,
+      "sides": 100,
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "keptValues": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 2000
+    }
+  },
+  {
+    "input": "7d12",
+    "sequence": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "parse": {
+      "ok": true,
+      "source": "7d12",
+      "normalized": "7d12",
+      "count": 7,
+      "sides": 12,
+      "keep": null,
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "7d12",
+      "count": 7,
+      "sides": 12,
+      "values": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "keptValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 28
+    }
+  },
+  {
+    "input": "6d4dh3",
+    "sequence": [
+      4,
+      1,
+      3,
+      2,
+      3,
+      1
+    ],
+    "parse": {
+      "ok": true,
+      "source": "6d4dh3",
+      "normalized": "6d4dh3",
+      "count": 6,
+      "sides": 4,
+      "keep": {
+        "mode": "dh",
+        "value": 3
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "6d4dh3",
+      "count": 6,
+      "sides": 4,
+      "values": [
+        4,
+        1,
+        3,
+        2,
+        3,
+        1
+      ],
+      "keptValues": [
+        2,
+        1,
+        1
+      ],
+      "droppedValues": [
+        3,
+        3,
+        4
+      ],
+      "modifier": 0,
+      "result": 4
+    }
+  },
+  {
+    "input": "6d4kh3",
+    "sequence": [
+      4,
+      1,
+      3,
+      2,
+      3,
+      1
+    ],
+    "parse": {
+      "ok": true,
+      "source": "6d4kh3",
+      "normalized": "6d4kh3",
+      "count": 6,
+      "sides": 4,
+      "keep": {
+        "mode": "kh",
+        "value": 3
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "6d4kh3",
+      "count": 6,
+      "sides": 4,
+      "values": [
+        4,
+        1,
+        3,
+        2,
+        3,
+        1
+      ],
+      "keptValues": [
+        4,
+        3,
+        3
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 10
+    }
+  },
+  {
+    "input": "6d4kl3",
+    "sequence": [
+      4,
+      1,
+      3,
+      2,
+      3,
+      1
+    ],
+    "parse": {
+      "ok": true,
+      "source": "6d4kl3",
+      "normalized": "6d4kl3",
+      "count": 6,
+      "sides": 4,
+      "keep": {
+        "mode": "kl",
+        "value": 3
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "6d4kl3",
+      "count": 6,
+      "sides": 4,
+      "values": [
+        4,
+        1,
+        3,
+        2,
+        3,
+        1
+      ],
+      "keptValues": [
+        2,
+        1,
+        1
+      ],
+      "droppedValues": [],
+      "modifier": 0,
+      "result": 4
+    }
+  },
+  {
+    "input": "6d4dl3",
+    "sequence": [
+      4,
+      1,
+      3,
+      2,
+      3,
+      1
+    ],
+    "parse": {
+      "ok": true,
+      "source": "6d4dl3",
+      "normalized": "6d4dl3",
+      "count": 6,
+      "sides": 4,
+      "keep": {
+        "mode": "dl",
+        "value": 3
+      },
+      "modifier": 0
+    },
+    "roll": {
+      "formula": "6d4dl3",
+      "count": 6,
+      "sides": 4,
+      "values": [
+        4,
+        1,
+        3,
+        2,
+        3,
+        1
+      ],
+      "keptValues": [
+        4,
+        3,
+        3
+      ],
+      "droppedValues": [
+        1,
+        1,
+        2
+      ],
+      "modifier": 0,
+      "result": 10
+    }
+  }
+]

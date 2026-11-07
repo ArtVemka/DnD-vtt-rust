@@ -1,0 +1,1054 @@
+/* ==================================================================
+ * Атмосферный слой: материалы, объём, закладки и дневник бросков.
+ *
+ * Файл подключается после 10-perf-mode.css: офисный режим гасит тени и
+ * фильтры через !important, а минимализм отключает текстуры ниже.
+ * Все цвета берутся из токенов, чтобы не спорить с палитрами и проверкой
+ * контраста.
+ *
+ * Правило специфичности: поверхности, которые темы раскрашивают сами
+ * (.panel, .btn, .input в 09-theme-studio.css), здесь не перебиваются.
+ * Если материал обязан выиграть (медальон карточки), селектор получает
+ * префикс [data-theme] или html[data-theme]; без него правило проиграет
+ * теме и элемент останется без нужного цвета.
+ * ================================================================== */
+
+/* ------------------------------------------------------ Светлый тон */
+
+/* Мелкое зерно тёмной темы на светлой бумаге читается как штакетник:
+   стол остаётся почти чистым листом с мягким светом, а текстуры живут
+   на панелях и карточках. */
+[data-tone='light'] {
+  --mat-texture-desk: radial-gradient(72% 54% at 50% -12%, var(--wash), transparent 64%);
+}
+
+/* ------------------------------------------------------------ Иконки */
+
+.icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------ Стол */
+
+body {
+  background-image: var(--mat-texture-desk);
+  background-size: var(--mat-texture-size);
+  background-attachment: fixed;
+}
+
+/* ---------------------------------------------------------- Панели */
+
+.panel {
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    inset 0 -2px 0 var(--mat-shadow-soft),
+    0 2px 0 var(--mat-edge),
+    0 8px 18px var(--mat-shadow);
+}
+
+.panel__title {
+  font-family: var(--font-title);
+  letter-spacing: var(--title-tracking);
+  text-shadow: 0 1px 0 var(--mat-shadow), 0 0 10px var(--accent-soft);
+}
+
+/* Бронзовая заклёпка вместо ромба перед названием раздела. */
+.panel__title::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, var(--mat-highlight), var(--mat-stud) 52%, var(--mat-edge) 100%);
+  box-shadow:
+    inset 0 1px 1px var(--mat-highlight),
+    0 1px 0 var(--mat-shadow);
+  opacity: 1;
+}
+
+.panel__fold {
+  border: 1px solid var(--mat-edge);
+  background: var(--mat-leather-2);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    0 1px 0 var(--mat-edge);
+}
+
+.panel__fold:hover {
+  background: var(--mat-leather);
+}
+
+/* --------------------------------------------------------- Кнопки */
+
+.btn {
+  background-image: var(--mat-texture-button), linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  background-blend-mode: soft-light, normal;
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    inset 0 -2px 0 var(--mat-shadow-soft),
+    0 3px 0 var(--mat-edge),
+    0 6px 12px var(--mat-shadow);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    inset 0 -2px 0 var(--mat-shadow-soft),
+    0 4px 0 var(--mat-edge),
+    0 8px 16px var(--mat-shadow);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 2px 5px var(--mat-shadow),
+    inset 0 -1px 0 var(--mat-highlight),
+    0 1px 0 var(--mat-edge);
+}
+
+.btn--accent {
+  background-image: var(--mat-texture-accent), var(--mat-texture-button);
+  background-blend-mode: normal, soft-light;
+  border-color: color-mix(in srgb, var(--accent) 68%, var(--mat-edge));
+  color: var(--mat-paper-ink);
+  text-shadow: 0 1px 0 var(--mat-highlight);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    inset 0 -2px 0 var(--mat-shadow-soft),
+    0 3px 0 var(--mat-edge),
+    0 8px 18px var(--accent-soft);
+}
+
+.btn--danger {
+  background-image:
+    linear-gradient(180deg, color-mix(in srgb, var(--danger) 58%, var(--surface-2)), color-mix(in srgb, var(--danger) 34%, var(--surface))),
+    var(--mat-texture-button);
+}
+
+.btn--ghost {
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  box-shadow: none;
+}
+
+.btn--ghost:active:not(:disabled) {
+  box-shadow: inset 0 2px 4px var(--mat-shadow);
+}
+
+/* ---------------------------------------------------------- Поля */
+
+.input,
+.textarea,
+.select,
+.field__input {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-deep) 22%, var(--surface)), var(--surface));
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 2px 4px var(--mat-shadow),
+    inset 0 -1px 0 var(--mat-highlight);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus,
+.field__input:focus {
+  border-color: var(--accent);
+  box-shadow:
+    inset 0 2px 4px var(--mat-shadow),
+    0 0 0 2px var(--accent-soft);
+}
+
+/* ----------------------------------------------------------- Карты */
+
+.card {
+  background:
+    var(--mat-texture-surface),
+    linear-gradient(160deg, var(--mat-paper), color-mix(in srgb, var(--mat-paper) 84%, var(--mat-edge)));
+  background-blend-mode: soft-light, normal;
+  border-color: var(--mat-edge);
+  color: var(--mat-paper-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mat-paper) 70%, #fff),
+    inset 0 -3px 0 var(--mat-shadow-soft),
+    0 3px 0 var(--mat-edge),
+    0 10px 22px var(--mat-shadow);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mat-paper) 70%, #fff),
+    inset 0 -3px 0 var(--mat-shadow-soft),
+    0 4px 0 var(--mat-edge),
+    0 14px 26px var(--mat-shadow);
+}
+
+.card__title {
+  color: var(--mat-paper-ink);
+}
+
+/* Главная пара действий: тот же пергамент, но с акцентной кромкой, чтобы
+ * взгляд цеплялся за неё раньше остальных карточек. */
+.card--primary {
+  border-color: var(--accent);
+  background:
+    var(--mat-texture-surface),
+    linear-gradient(160deg, color-mix(in srgb, var(--mat-paper) 84%, var(--accent)), var(--mat-paper));
+  background-blend-mode: soft-light, normal;
+}
+
+.card--primary .card__title {
+  color: var(--mat-paper-ink);
+}
+
+.card--primary .card__icon {
+  border-color: var(--mat-edge);
+  color: var(--mat-paper-ink);
+}
+
+.card__text {
+  color: color-mix(in srgb, var(--mat-paper-ink) 72%, var(--mat-paper));
+}
+
+/* Медальон в любой теме: пергаментная печать с тёмной гравировкой. Тема
+   задаёт только форму и кромку, иначе в «Лесу» и «Стимпанке» глиф ложится
+   тёмным по тёмному и карточка выглядит сломанной. */
+[data-theme] .card__icon {
+  color: var(--mat-paper-ink);
+  background:
+    radial-gradient(circle at 34% 26%, color-mix(in srgb, var(--mat-paper) 60%, #fff), var(--mat-paper) 58%, color-mix(in srgb, var(--mat-paper) 76%, var(--mat-edge)) 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mat-paper) 80%, #fff),
+    inset 0 -2px 3px var(--mat-shadow-soft),
+    0 2px 0 var(--mat-edge);
+}
+
+/* Знак на карточке читается как оттиск печати, а не как мелкая пиктограмма. */
+.card__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.home__title {
+  font-family: var(--font-title);
+  text-shadow: 0 2px 0 var(--mat-shadow), 0 0 18px var(--accent-soft);
+}
+
+/* Монограмма D&D латиницей: единственное место, где MedievalSharp читается
+   полностью, кириллицы в нём нет. */
+.home__logo {
+  font-family: var(--font-fantasy);
+}
+
+/* ---------------------------------------------------------- Вкладки */
+
+.tabs {
+  background-image: var(--mat-texture-surface);
+  background-blend-mode: soft-light;
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    0 2px 0 var(--mat-edge);
+}
+
+.tabs__btn {
+  background-image: var(--mat-texture-button);
+  background-blend-mode: soft-light;
+  color: var(--text-dim);
+  box-shadow:
+    inset 0 0 0 1px var(--mat-edge),
+    inset 0 1px 0 var(--mat-highlight),
+    0 2px 0 var(--mat-edge);
+}
+
+.tabs__btn:hover {
+  color: var(--text);
+  background-color: var(--mat-leather-2);
+}
+
+.tabs__btn.is-active {
+  color: var(--mat-paper-ink);
+  background-image: var(--mat-texture-accent), var(--mat-texture-button);
+  background-blend-mode: normal, soft-light;
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    inset 0 -2px 0 var(--mat-shadow-soft),
+    0 3px 0 var(--mat-edge);
+  transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------- Шапка */
+
+.topbar {
+  background-image: var(--mat-texture-surface);
+  background-blend-mode: soft-light;
+  border-bottom-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    0 2px 0 var(--mat-shadow-soft),
+    0 4px 14px var(--mat-shadow);
+}
+
+.topbar__title {
+  font-family: var(--font-title);
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 var(--mat-shadow);
+}
+
+/* ------------------------------------------------------- Карта */
+
+.panel--map {
+  border-width: 2px;
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 0 0 1px var(--mat-shadow-soft),
+    inset 0 2px 8px var(--mat-shadow),
+    0 3px 0 var(--mat-edge),
+    0 12px 26px var(--mat-shadow);
+}
+
+.map-toolbar .map-tool {
+  background-image: var(--mat-texture-button);
+  background-blend-mode: soft-light;
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    0 2px 0 var(--mat-edge);
+}
+
+.map-tool.is-on {
+  background-image: var(--mat-texture-accent), var(--mat-texture-button);
+  background-blend-mode: normal, soft-light;
+}
+
+/* --------------------------------------------------- Кубики и дневник */
+
+.dice__quick-btn {
+  background-image: var(--mat-texture-button), linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  background-blend-mode: soft-light, normal;
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    inset 0 -2px 0 var(--mat-shadow-soft),
+    0 3px 0 var(--mat-edge);
+  font-family: var(--font-fantasy);
+}
+
+.dice__quick-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px var(--mat-shadow), 0 1px 0 var(--mat-edge);
+}
+
+.dice__controls .btn--accent {
+  min-height: 42px;
+  padding-inline: 22px;
+  font-family: var(--font-title);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background-image: var(--mat-texture-accent), var(--mat-texture-button);
+  background-blend-mode: normal, soft-light;
+  box-shadow:
+    inset 0 2px 0 var(--mat-highlight),
+    inset 0 -3px 0 var(--mat-shadow-soft),
+    0 5px 0 var(--mat-edge),
+    0 9px 16px var(--mat-shadow);
+}
+
+.dice__controls .btn--accent:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 3px 6px var(--mat-shadow),
+    0 1px 0 var(--mat-edge);
+}
+
+.dice__history {
+  padding: 12px 14px 12px 30px;
+  border: 1px solid var(--mat-edge);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--mat-paper), color-mix(in srgb, var(--mat-paper) 84%, var(--mat-edge)));
+  box-shadow:
+    inset 0 0 18px var(--mat-shadow-soft),
+    inset 14px 0 0 color-mix(in srgb, var(--mat-paper-ink) 6%, transparent);
+  color: var(--mat-paper-ink);
+  font-family: var(--font-hand);
+}
+
+.dice__row {
+  border-bottom: 1px dashed var(--mat-rule);
+  background: none;
+  border-radius: 0;
+  color: var(--mat-paper-ink);
+  /* 12.5 px рукописью на бумаге читаются впритык: строка дневника должна
+     читаться, а не разбираться. */
+  font-size: 13.5px;
+  padding: 6px 8px;
+}
+
+.dice__row-name {
+  font-family: var(--font-hand);
+  color: var(--mat-paper-ink);
+}
+
+.dice__row-time {
+  color: color-mix(in srgb, var(--mat-paper-ink) 62%, var(--mat-paper));
+}
+
+.dice__row-die,
+.dice__row-result {
+  font-family: var(--font-num);
+  color: var(--mat-paper-ink);
+}
+
+.dice__row-result {
+  font-weight: 600;
+}
+
+.dice__history-section .section__title {
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------- Окна */
+
+.modal,
+.dialog {
+  background-image: var(--mat-texture-surface);
+  background-blend-mode: soft-light;
+  border-color: var(--mat-edge);
+  box-shadow:
+    inset 0 1px 0 var(--mat-highlight),
+    0 4px 0 var(--mat-edge),
+    0 18px 40px var(--mat-shadow);
+}
+
+.modal__title,
+.dialog__title {
+  font-family: var(--font-title);
+  text-shadow: 0 1px 0 var(--mat-shadow);
+}
+
+/* --------------------------------------------------- Минимализм */
+
+/* Минимализм оставляет палитру, но убирает материал, объём и рукопись. */
+[data-focus='on'] {
+  --font-title: var(--font);
+  --font-num: var(--font);
+  --font-hand: var(--font);
+  --font-fantasy: var(--font);
+  --mat-texture-desk: none;
+  --mat-texture-surface: none;
+  --mat-texture-button: none;
+  --mat-texture-accent: none;
+}
+
+[data-focus='on'] body,
+[data-focus='on'] .panel,
+[data-focus='on'] .card,
+[data-focus='on'] .tabs,
+[data-focus='on'] .topbar,
+[data-focus='on'] .modal,
+[data-focus='on'] .dialog,
+[data-focus='on'] .dice__history,
+[data-focus='on'] .dice__quick-btn,
+[data-focus='on'] .btn,
+[data-focus='on'] .input,
+[data-focus='on'] .textarea,
+[data-focus='on'] .select,
+[data-focus='on'] .field__input {
+  background-image: none !important;
+}
+
+[data-focus='on'] .panel,
+[data-focus='on'] .card,
+[data-focus='on'] .tabs,
+[data-focus='on'] .topbar,
+[data-focus='on'] .modal,
+[data-focus='on'] .dialog,
+[data-focus='on'] .dice__quick-btn,
+[data-focus='on'] .btn {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+[data-focus='on'] .card {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* В плоском режиме акцент остаётся, но без металла и объёма: иначе тёмные
+   чернила ложатся на тёмную заливку и подпись исчезает. */
+[data-focus='on'] .btn--accent {
+  background-color: var(--accent);
+  color: var(--mat-paper-ink);
+}
+
+[data-focus='on'] .tabs__btn.is-active {
+  background-color: var(--accent-soft);
+  color: var(--text);
+}
+
+[data-focus='on'] .tabs__btn {
+  background-image: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+[data-focus='on'] .card .card__icon {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+[data-focus='on'] .card__title {
+  color: var(--text);
+}
+
+[data-focus='on'] .card__text {
+  color: var(--muted);
+}
+
+[data-focus='on'] .dice__history {
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+[data-focus='on'] .dice__row,
+[data-focus='on'] .dice__row-name,
+[data-focus='on'] .dice__row-time,
+[data-focus='on'] .dice__row-die,
+[data-focus='on'] .dice__row-result {
+  color: var(--text);
+}
+
+/* ------------------------------------------------------ Офисный ПК */
+
+html[data-perf='on'] body,
+html[data-perf='on'] .panel,
+html[data-perf='on'] .card,
+html[data-perf='on'] .tabs,
+html[data-perf='on'] .topbar,
+html[data-perf='on'] .modal,
+html[data-perf='on'] .dialog,
+html[data-perf='on'] .dice__history,
+html[data-perf='on'] .dice__quick-btn,
+html[data-perf='on'] .btn,
+html[data-perf='on'] .input,
+html[data-perf='on'] .textarea,
+html[data-perf='on'] .select,
+html[data-perf='on'] .field__input {
+  background-image: none !important;
+}
+
+@media (max-width: 760px) {
+  .card {
+    box-shadow:
+      inset 0 1px 0 var(--mat-highlight),
+      0 2px 0 var(--mat-edge);
+  }
+
+  .dice__history {
+    padding-left: 20px;
+  }
+}
+
+/* ==========================================================================
+ * Плоская оболочка.
+ *
+ * Новый вид главного экрана и стола: ровные скруглённые поверхности, тонкие
+ * обводки и свечение вместо пергамента, заклёпок и гравировки. Слой стоит
+ * последним и перекрывает фактуры 08/09/11, не удаляя их: темы остаются
+ * цветными, а материал становится общим.
+ * ========================================================================== */
+
+/* ------------------------------------------------------------ Главный */
+
+[data-theme] .home__logo {
+  display: block;
+  width: auto;
+  height: auto;
+  padding: 0;
+  font-family: var(--font-fantasy);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--gold) 35%, transparent);
+  animation: none;
+  transform: none;
+}
+
+[data-theme] .home__logo::before {
+  content: none;
+}
+
+[data-theme] .home__brand:hover .home__logo {
+  transform: none;
+}
+
+[data-theme] .home__title {
+  margin: 4px 0 0;
+  font-family: var(--font-title);
+  font-size: clamp(30px, 4.4vw, 54px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: 0 2px 8px color-mix(in srgb, var(--bg-deep) 70%, transparent);
+  animation: none;
+}
+
+[data-theme] .home__brand::before,
+[data-theme] .home__subtitle::before,
+[data-theme] .home__subtitle::after,
+[data-theme] .home__group__title::before {
+  content: none;
+}
+
+[data-theme] .home__group {
+  background-image: none;
+  background-color: color-mix(in srgb, var(--surface) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--home-accent) 28%, var(--border));
+  border-radius: 18px;
+  box-shadow:
+    0 24px 60px color-mix(in srgb, var(--bg-deep) 62%, transparent),
+    inset 0 0 44px color-mix(in srgb, var(--home-accent) 5%, transparent);
+}
+
+[data-theme] .card {
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  background-image: none;
+  border: 1px solid color-mix(in srgb, var(--home-accent) 38%, var(--border));
+  border-radius: 999px;
+  color: var(--text);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--home-accent) 12%, transparent);
+  transform: none;
+}
+
+[data-theme] .card::after {
+  content: none;
+}
+
+[data-theme] .card:hover {
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  border-color: var(--home-accent);
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--home-accent) 38%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--home-accent) 16%, transparent);
+  transform: translateY(-2px);
+}
+
+[data-theme] .card--primary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--home-accent) 12%, var(--surface-2)),
+    color-mix(in srgb, var(--home-accent) 4%, var(--surface))
+  );
+}
+
+[data-theme] .card__title,
+[data-theme] .card--primary .card__title {
+  color: inherit;
+}
+
+/* ------------------------------------------------------------ Стол */
+
+/* Бумажное волокно поверх всего окна спорит с плоскими панелями. */
+body::after {
+  content: none;
+}
+
+body {
+  background-image: none;
+}
+
+[data-theme] .topbar {
+  background: color-mix(in srgb, var(--bg-deep) 84%, var(--bg));
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+}
+
+[data-theme] .topbar::after,
+[data-theme] .topbar__title::before {
+  content: none;
+}
+
+[data-theme] .panel {
+  background: var(--surface);
+  background-image: none;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+[data-theme] .panel::before,
+[data-theme] .panel::after,
+[data-theme] .panel__title::before,
+[data-theme] .panel__title::after {
+  content: none;
+}
+
+[data-theme] .panel__title {
+  padding-bottom: 0;
+  color: var(--text-dim);
+  border-bottom: 0;
+  text-shadow: none;
+}
+
+[data-theme] .panel__title:hover {
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* Раздел левой колонки: знак слева, название, действие справа. */
+[data-theme] .panel__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--gold);
+}
+
+[data-theme] .panel__icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-theme] .col--left > .panel > .panel__title > .panel__icon {
+  flex: 0 0 auto;
+}
+
+[data-theme] .col--left > .panel > .panel__title > .panel__title-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Кнопка сворачивания: тихий шеврон, а не отдельная кнопка в рамке. */
+[data-theme] .panel__fold {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+[data-theme] .panel__fold:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Панель правой колонки: заголовок с иконкой и тонкой линией. */
+[data-theme] .panel--tab > .panel__title {
+  padding-bottom: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  color: var(--text);
+  gap: 8px;
+}
+
+[data-theme] .panel--tab > .panel__title .panel__icon {
+  color: var(--gold);
+}
+
+[data-theme] .tabs {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  gap: 6px;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+[data-theme] .tabs__btn {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 36px;
+  padding: 0;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  background-image: none;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: none;
+  color: var(--text-dim);
+  transform: none;
+  text-shadow: none;
+}
+
+[data-theme] .tabs__btn::after,
+[data-theme] .tabs__btn--gap::before {
+  content: none;
+}
+
+[data-theme] .tabs__btn--gap {
+  margin-left: 0;
+}
+
+[data-theme] .tabs__btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+[data-theme] .tabs__btn.is-active {
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Полоса вкладок — иконки без подписей, как на референсе. Подсказки и
+   aria-label у кнопок уже есть, поэтому смысл не теряется. */
+[data-theme] .tabs__label {
+  display: none;
+}
+
+[data-theme] .tabs__icon {
+  font-size: 16px;
+}
+
+[data-theme] .btn {
+  background-image: none;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Акцентная кнопка жила на градиенте, а не на цвете: после снятия фактур
+   заливку нужно вернуть, иначе текст остаётся на прозрачном фоне. */
+[data-theme] .btn--accent {
+  background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+[data-theme] .btn--accent:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-hover) 82%, var(--gold)),
+    var(--accent-hover)
+  );
+}
+
+[data-theme] .btn:hover:not(:disabled),
+[data-theme] .btn:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+[data-theme] .input,
+[data-theme] .textarea,
+[data-theme] .select,
+[data-theme] .field__input {
+  background: var(--surface-2);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+[data-theme] .input:focus,
+[data-theme] .textarea:focus,
+[data-theme] .select:focus,
+[data-theme] .field__input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+[data-theme] .chat,
+[data-theme] .dice,
+[data-theme] .adv-item {
+  background-image: none;
+}
+
+[data-theme] .modal,
+[data-theme] .dialog {
+  background: var(--surface);
+  background-image: none;
+  border-color: var(--border);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--bg-deep) 70%, transparent);
+}
+
+[data-theme] .modal__title,
+[data-theme] .dialog__title {
+  text-shadow: none;
+}
+
+/* ------------------------------------------------------------ Карта */
+
+/* Верхняя панель карты и полотно — две отдельные плашки, как на референсе. */
+[data-theme] .panel--map {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+[data-theme] .map-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+[data-theme] .mapview.is-menus-collapsed .map-controls {
+  padding: 4px 8px;
+}
+
+[data-theme] .map-stage {
+  border-color: var(--border);
+  border-radius: 14px;
+}
+
+[data-theme] .map-tabs {
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+[data-theme] .map-tab {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  padding: 7px 12px;
+}
+
+[data-theme] .map-tab:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+[data-theme] .map-tab.is-active {
+  border-color: var(--gold);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+  color: var(--gold);
+}
+
+/* Инструменты карты: иконка и короткая подпись под ней. */
+[data-theme] .map-toolbar {
+  gap: 6px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+[data-theme] .map-tool {
+  width: auto;
+  min-width: 58px;
+  height: 48px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 8px 6px;
+  border-radius: 8px;
+}
+
+[data-theme] .map-tool svg {
+  width: 16px;
+  height: 16px;
+}
+
+[data-theme] .map-tool::after {
+  content: attr(data-caption);
+  position: static;
+  inset: auto;
+  border-radius: 0;
+  background: none;
+  pointer-events: none;
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+[data-theme] .map-tool.is-on::after {
+  color: var(--gold);
+}
+
+[data-theme] .map-tool.is-on {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+  color: var(--gold);
+}
+
+/* Кубики: крупная сетка костей и дневник на тёмной панели, а не на пергаменте. */
+[data-theme] .dice__quick {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+[data-theme] .dice__quick-btn {
+  min-height: 54px;
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  background-image: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--text);
+  font-family: var(--font-title);
+  font-size: 18px;
+}
+
+[data-theme] .dice__quick-btn:hover:not(:disabled) {
+  transform: none;
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+/* Двадцатка — главная кость: золотая кромка выделяет её из ряда. */
+[data-theme] .dice__quick-btn:nth-child(6) {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
+}
+
+[data-theme] .dice__history {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--surface) 86%, var(--bg-deep));
+  background-image: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+[data-theme] .dice__row {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+[data-theme] .dice__row-name,
+[data-theme] .dice__row-time,
+[data-theme] .dice__row-die,
+[data-theme] .dice__row-result {
+  color: var(--text-dim);
+}
+
+[data-theme] .dice__row-result {
+  color: var(--gold);
+}
