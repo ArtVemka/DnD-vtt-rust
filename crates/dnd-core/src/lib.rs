@@ -13,6 +13,7 @@ pub mod content;
 pub mod dice;
 pub mod media;
 pub mod model;
+pub mod room;
 pub mod rules;
 pub mod session_log;
 pub mod sheet;

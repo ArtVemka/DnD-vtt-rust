@@ -4,6 +4,7 @@
 //! and the training table uses a plain RNG. Parsing is pure and deterministic.
 
 use serde::Serialize;
+use serde_json::Value;
 
 /// Real D&D dice. Mirrors `DICE_SIDES` in `server/state.js`.
 pub const DICE_SIDES: [u32; 7] = [4, 6, 8, 10, 12, 20, 100];
@@ -316,6 +317,21 @@ pub fn hide_roll_result(roll: &Roll) -> Roll {
         result: None,
         ..roll.clone()
     }
+}
+
+/// Keeps a hidden roll's shape but removes the numbers, so they cannot leak
+/// through the state snapshot a player receives. Same as `hideRollResult`.
+pub fn hide_roll_value(roll: &Value) -> Value {
+    if !roll.get("hidden").and_then(Value::as_bool).unwrap_or(false) {
+        return roll.clone();
+    }
+    let mut out = roll.as_object().cloned().unwrap_or_default();
+    out.remove("result");
+    out.remove("values");
+    out.remove("keptValues");
+    out.remove("droppedValues");
+    out.insert("result".to_string(), Value::Null);
+    Value::Object(out)
 }
 
 #[cfg(test)]

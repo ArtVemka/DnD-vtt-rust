@@ -1,51 +1,67 @@
-//! Realtime table server: axum + Socket.IO.
+//! Realtime table server entrypoint.
 //!
-//! Phase 1 is a protocol spike: serve the existing renderer and answer `ping`.
-//! Parity with `E:\DnD\server\socket.js` is checked by `tools/parity.js`.
+//! Environment:
+//! - `DND_DATA`      data dir (default `data`), campaigns live in `<dir>/campaigns`
+//! - `DND_CAMPAIGN`  campaign id to open; otherwise the newest or a new one
+//! - `DND_HOST_KEY`  DM secret; generated and printed when missing
+//! - `DND_RENDERER`  renderer folder (default `renderer`)
+//! - `DND_PORT`      fixed port; otherwise the reference range 32100..32164
 
-mod auth;
-mod net;
+use std::path::Path;
+use std::sync::Arc;
+use std::time::Duration;
 
-use axum::Router;
-use serde_json::{json, Value};
-use socketioxide::{
-    extract::{Data, SocketRef},
-    SocketIo,
-};
-use tower_http::{cors::CorsLayer, services::ServeDir};
-
-fn now_ms() -> u128 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_millis())
-        .unwrap_or_default()
-}
-
-async fn on_connect(socket: SocketRef, Data(handshake): Data<Value>) {
-    println!("connect {} {:?}", socket.id, handshake);
-
-    socket.on("ping", async |socket: SocketRef, Data(payload): Data<Value>| {
-        let echo = payload.get("echo").cloned().unwrap_or(Value::Null);
-        let _ = socket.emit("pong", &json!({ "time": now_ms(), "echo": echo }));
-    });
-
-    socket.on_disconnect(async |socket: SocketRef| {
-        println!("disconnect {}", socket.id);
-    });
-}
+use dnd_core::campaign::CampaignStore;
+use dnd_core::room::RoomState;
+use dnd_server::net;
+use dnd_server::table::{create_io, Table};
+use dnd_server::create_app;
+use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt().with_max_level(tracing::Level::INFO).init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
 
-    let (layer, io) = SocketIo::new_layer();
-    io.ns("/", on_connect);
+    let data_dir = std::env::var("DND_DATA").unwrap_or_else(|_| "data".to_string());
+    let campaigns_root = Path::new(&data_dir).join("campaigns");
+    let store = CampaignStore::new(&campaigns_root, None)?;
+
+    let campaign = match std::env::var("DND_CAMPAIGN").ok() {
+        Some(id) => store.load(&id)?,
+        None => {
+            let newest = store
+                .list()?
+                .first()
+                .and_then(|campaign| campaign.get("id"))
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            match newest {
+                Some(id) => store.load(&id)?,
+                None => store.create("Кампания")?,
+            }
+        }
+    };
+    let campaign_id = campaign
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+
+    let host_key = std::env::var("DND_HOST_KEY").unwrap_or_else(|_| {
+        format!(
+            "{}{}",
+            dnd_core::content::new_token_id(),
+            dnd_core::content::new_token_id()
+        )
+    });
+
+    let table = Table::new(RoomState::new(campaign), host_key.clone(), Some(Arc::new(store)));
+    let (layer, _io) = create_io(table.clone());
 
     let static_dir = std::env::var("DND_RENDERER").unwrap_or_else(|_| "renderer".to_string());
-    let app = Router::new()
-        .fallback_service(ServeDir::new(&static_dir))
-        .layer(CorsLayer::permissive())
-        .layer(layer);
+    let app = create_app(table.clone(), &static_dir).layer(layer);
 
     let port = match std::env::var("DND_PORT").ok().and_then(|value| value.parse::<u16>().ok()) {
         Some(port) => port,
@@ -53,6 +69,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let listener = tokio::net::TcpListener::bind(("127.0.0.1", port)).await?;
     println!("LISTENING {}", listener.local_addr()?);
+    println!("HOSTKEY {host_key}");
+    println!("CAMPAIGN {campaign_id}");
+
+    // Autosave every minute, like the reference desktop shell.
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(Duration::from_secs(60));
+        ticker.tick().await;
+        loop {
+            ticker.tick().await;
+            if let Err(error) = table.save_if_dirty() {
+                eprintln!("[autosave] {error}");
+            }
+        }
+    });
+
     axum::serve(listener, app).await?;
     Ok(())
 }
