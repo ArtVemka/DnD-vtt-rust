@@ -272,7 +272,7 @@
     return { ax, ay, az };
   }
 
-  function drawValue(context, face, size, value) {
+  function drawValue(context, face, size, value, alpha = 1) {
     const points = face.projected;
     const text = String(value);
     if (!text || points.length < 3 || face.inradius < 2) return;
@@ -286,6 +286,7 @@
     const angle = bestAngle(points, face.cx, face.cy, halfWidth, halfHeight, face.edgeAngle);
 
     context.save();
+    context.globalAlpha = alpha;
     context.beginPath();
     points.forEach(([x, y], index) => {
       if (index === 0) context.moveTo(x, y);
@@ -303,7 +304,7 @@
     context.restore();
   }
 
-  function draw(context, shape, size, ax, ay, az, value, showValue, target, lift = 0) {
+  function draw(context, shape, size, ax, ay, az, value, showValue, target, lift = 0, valueAlpha = 1) {
     context.clearRect(0, 0, size, size);
 
     const glow = context.createRadialGradient(
@@ -383,7 +384,7 @@
       polygonInradius(front.projected, cx, cy),
       polygonArea(front.projected) / 8
     );
-    drawValue(context, front, size, value);
+    drawValue(context, front, size, value, valueAlpha);
   }
 
   /**
@@ -499,10 +500,14 @@
       const ax = state.ax + shortest(state.ax, finalX) * eased;
       const ay = state.ay + shortest(state.ay, finalY) * eased;
       const az = state.az + shortest(state.az, finalZ) * eased;
-      const showValue = !mini && Boolean(value) && settle >= 1;
-      draw(context, shape, size, ax, ay, az, value, showValue, target, state.height);
+      // Число проступает после остановки, а не вспыхивает.
+      const fade = restAt
+        ? Math.min(1, Math.max(0, (elapsed - restAt - settleTime) / 0.18))
+        : 0;
+      const showValue = !mini && Boolean(value) && fade > 0;
+      draw(context, shape, size, ax, ay, az, value, showValue, target, state.height, fade);
 
-      if (settle < 1 && elapsed < 6) {
+      if (fade < 1 && elapsed < 6) {
         frame = requestAnimationFrame(tick);
       }
     };

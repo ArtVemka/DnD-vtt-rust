@@ -582,6 +582,24 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  animation: dice3d-in 0.24s var(--ease, ease) both;
+}
+
+/* Кость сама садится на грань — CSS-прыжок результата ей только мешает. */
+.dice__last-value.is-die.dice3d-host.is-pop {
+  animation: none;
+}
+
+@keyframes dice3d-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .dice__tumbler-die.dice3d-host {

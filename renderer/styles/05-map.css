@@ -166,6 +166,24 @@
   display: none;
 }
 
+/* Меню раскрывается из-под кнопки, а не появляется рывком. */
+.map-grid-menu:not([hidden]) {
+  transform-origin: top left;
+  animation: map-menu-in 0.18s var(--ease-out, ease-out);
+}
+
+@keyframes map-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .map-grid-menu__check,
 .map-grid-menu__row {
   display: flex;
