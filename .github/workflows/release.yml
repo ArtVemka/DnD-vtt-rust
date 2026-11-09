@@ -17,7 +17,22 @@ env:
   RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          NOTES=$'Порт стола D&D 5e на Rust и Tauri 2.\n\nУстановленная версия обновляется сама: проверка при запуске, затем Настройки → Обновления. Кампании и настройки лежат в отдельной папке и при обновлении не удаляются.\n\nФайлы: установщик и портативная сборка для Windows, AppImage и deb для Linux.'
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "DnD Table $RELEASE_TAG" --notes "$NOTES"
+
   build:
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -45,26 +60,67 @@ jobs:
         with:
           workspaces: .
 
-      - name: Build and publish
-        uses: tauri-apps/tauri-action@v1
+      - name: Build bundles
+        working-directory: crates/dnd-desktop
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           APPIMAGE_EXTRACT_AND_RUN: 1
-        with:
-          projectPath: crates/dnd-desktop
-          tagName: ${{ env.RELEASE_TAG }}
-          releaseName: DnD Table ${{ env.RELEASE_TAG }}
-          releaseBody: |
-            Порт стола D&D 5e на Rust и Tauri 2.
+        run: npx --yes @tauri-apps/cli@2 build
 
-            Установленная версия обновляется сама: проверка при запуске, затем
-            Настройки → Обновления. Кампании и настройки лежат в отдельной папке
-            и при обновлении не удаляются.
+      - name: Portable archive (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/portable.ps1
 
-            Файлы: установщик и портативная сборка для Windows, AppImage и deb
-            для Linux.
-          releaseDraft: false
-          prerelease: false
-          updaterJsonPreferNsis: true
-          retryAttempts: 2
+      - name: Upload assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          upload() {
+            gh release upload "$RELEASE_TAG" "$@" --repo "$GITHUB_REPOSITORY" --clobber
+          }
+          if [ -d target/release/bundle/nsis ]; then
+            upload target/release/bundle/nsis/*.exe target/release/bundle/nsis/*.sig
+          fi
+          if [ -d target/release/bundle/msi ]; then
+            upload target/release/bundle/msi/*.msi target/release/bundle/msi/*.sig
+          fi
+          if [ -d target/release/bundle/appimage ]; then
+            upload target/release/bundle/appimage/*.AppImage target/release/bundle/appimage/*.sig
+          fi
+          if [ -d target/release/bundle/deb ]; then
+            upload target/release/bundle/deb/*.deb target/release/bundle/deb/*.sig
+          fi
+          if [ -f dist/DnD-Table-portable.zip ]; then
+            upload dist/DnD-Table-portable.zip
+          fi
+
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Assemble latest.json and publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p sigs
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern "*.sig" --dir sigs
+          assets=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
+          win=$(echo "$assets" | grep -E 'setup\.exe$' | head -n1)
+          app=$(echo "$assets" | grep -E '\.AppImage$' | head -n1)
+          version="${RELEASE_TAG#v}"
+          base="https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG"
+          jq -n \
+            --arg version "$version" \
+            --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg win "$base/$win" --arg winsig "$(cat "sigs/$win.sig")" \
+            --arg app "$base/$app" --arg appsig "$(cat "sigs/$app.sig")" \
+            '{version: $version, pub_date: $date, platforms: {
+              "windows-x86_64": {signature: $winsig, url: $win},
+              "linux-x86_64": {signature: $appsig, url: $app}
+            }}' > latest.json
+          gh release upload "$RELEASE_TAG" latest.json --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
