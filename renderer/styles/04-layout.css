@@ -141,6 +141,11 @@ body.is-resizing * {
   display: none;
 }
 
+/* В свёрнутой колонке места нет даже для названия выбранной вкладки. */
+.layout.is-right-collapsed .tabs__btn.is-active .tabs__label {
+  display: none;
+}
+
 .layout.is-right-collapsed .tabs__icon {
   font-size: 17px;
 }
@@ -353,6 +358,18 @@ body.is-resizing * {
      а название каждой вкладки доступно подсказкой и диктору. */
   .tabs__label {
     display: none;
+  }
+
+  /* Выбранная вкладка разворачивается и показывает название: по одной
+     иконке не видно, где находишься. */
+  .tabs .tabs__btn.is-active {
+    flex: 0 0 auto;
+    width: auto;
+    padding-inline: 10px;
+  }
+
+  .tabs__btn.is-active .tabs__label {
+    display: inline;
   }
 
   .tabs__btn {
