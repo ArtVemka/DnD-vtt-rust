@@ -2278,8 +2278,9 @@ body.is-showcase .party-hud {
    лог скрывается вместе с HUD. */
 .map-log {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  right: 14px;
+  /* Над панелью масштаба, иначе строки бросков уходят под неё. */
+  bottom: 54px;
   z-index: 8;
   display: flex;
   flex-direction: column;
