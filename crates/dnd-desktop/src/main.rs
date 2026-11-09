@@ -47,7 +47,11 @@ fn default_data_dir() -> PathBuf {
     }
     match std::env::var_os("APPDATA") {
         Some(dir) => PathBuf::from(dir).join("dnd-table"),
-        None => PathBuf::from("data"),
+        None => std::env::var_os("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
+            .map(|dir| dir.join("dnd-table"))
+            .unwrap_or_else(|| PathBuf::from("data")),
     }
 }
 
