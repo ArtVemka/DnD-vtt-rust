@@ -143,7 +143,116 @@
       + `${Math.round(DARK[2] + (GOLD[2] - DARK[2]) * mix)})`;
   }
 
-  function draw(context, shape, size, ax, ay, az) {
+  function polygonArea(points) {
+    let area = 0;
+    for (let index = 0; index < points.length; index += 1) {
+      const current = points[index];
+      const next = points[(index + 1) % points.length];
+      area += current[0] * next[1] - next[0] * current[1];
+    }
+    return Math.abs(area) / 2;
+  }
+
+  function polygonInradius(points, cx, cy) {
+    let min = Infinity;
+    for (let index = 0; index < points.length; index += 1) {
+      const a = points[index];
+      const b = points[(index + 1) % points.length];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      const distance = Math.abs(
+        (b[1] - a[1]) * cx - (b[0] - a[0]) * cy + b[0] * a[1] - b[1] * a[0]
+      ) / length;
+      min = Math.min(min, distance);
+    }
+    return Number.isFinite(min) ? min : 0;
+  }
+
+  function uprightAngle(points, cx, cy) {
+    let best = null;
+    let bestLength = 0;
+    for (let index = 0; index < points.length; index += 1) {
+      const a = points[index];
+      const b = points[(index + 1) % points.length];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (length > bestLength) {
+        bestLength = length;
+        best = [b[0] - a[0], b[1] - a[1]];
+      }
+    }
+    if (!best) return 0;
+    let angle = Math.atan2(best[1], best[0]);
+    // Держим цифру читаемой: не вверх ногами.
+    if (angle > Math.PI / 2) angle -= Math.PI;
+    if (angle < -Math.PI / 2) angle += Math.PI;
+    return angle;
+  }
+
+  function pointInside(points, x, y) {
+    let inside = false;
+    for (let index = 0, previous = points.length - 1; index < points.length; previous = index++) {
+      const [xi, yi] = points[index];
+      const [xj, yj] = points[previous];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  function boxFits(points, cx, cy, halfWidth, halfHeight, angle) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    for (const sx of [-1, 1]) {
+      for (const sy of [-1, 1]) {
+        const x = cx + sx * halfWidth * cos - sy * halfHeight * sin;
+        const y = cy + sx * halfWidth * sin + sy * halfHeight * cos;
+        if (!pointInside(points, x, y)) return false;
+      }
+    }
+    return true;
+  }
+
+  function bestAngle(points, cx, cy, halfWidth, halfHeight, preferred) {
+    // Сначала пробуем ровную цифру: она читается лучше всего. Если не влезает
+    // в узкую грань — доворачиваем по длинной стороне.
+    for (const angle of [0, preferred, preferred + Math.PI / 2, preferred - Math.PI / 2]) {
+      if (boxFits(points, cx, cy, halfWidth, halfHeight, angle)) return angle;
+    }
+    return preferred;
+  }
+
+  function drawValue(context, face, size, value) {
+    const points = face.projected;
+    const text = String(value);
+    if (!text || points.length < 3 || face.inradius < 2) return;
+    const fontSize = Math.min(
+      size * 0.28,
+      face.inradius * 1.25 / (text.length > 1 ? 1.15 : 1)
+    );
+    if (fontSize < 5) return;
+    const halfWidth = fontSize * 0.32 * text.length;
+    const halfHeight = fontSize * 0.6;
+    const angle = bestAngle(points, face.cx, face.cy, halfWidth, halfHeight, face.edgeAngle);
+
+    context.save();
+    context.beginPath();
+    points.forEach(([x, y], index) => {
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+    context.closePath();
+    context.clip();
+    context.translate(face.cx, face.cy);
+    context.rotate(angle);
+    context.font = `700 ${fontSize}px "Cinzel", Georgia, serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = '#2a1a0d';
+    context.fillText(text, 0, 0);
+    context.restore();
+  }
+
+  function draw(context, shape, size, ax, ay, az, value, showValue) {
     context.clearRect(0, 0, size, size);
 
     const glow = context.createRadialGradient(
@@ -186,6 +295,8 @@
     const line = Math.max(1, size * 0.014);
     for (const face of faces) {
       const projected = face.points.map((point) => project(point, size));
+      face.projected = projected;
+      face.area = polygonArea(projected);
       context.beginPath();
       projected.forEach(([x, y], index) => {
         if (index === 0) context.moveTo(x, y);
@@ -206,6 +317,23 @@
         context.stroke();
       }
     }
+
+    if (!showValue || !value) return;
+    const candidates = faces.filter((face) => face.normal[2] > 0.08);
+    const front = (candidates.length ? candidates : faces)
+      .slice()
+      .sort((left, right) => (right.area * right.normal[2]) - (left.area * left.normal[2]))[0];
+    if (!front || !front.projected) return;
+    const cx = front.projected.reduce((sum, point) => sum + point[0], 0) / front.projected.length;
+    const cy = front.projected.reduce((sum, point) => sum + point[1], 0) / front.projected.length;
+    front.cx = cx;
+    front.cy = cy;
+    front.edgeAngle = uprightAngle(front.projected, cx, cy);
+    front.inradius = Math.min(
+      polygonInradius(front.projected, cx, cy),
+      polygonArea(front.projected) / 8
+    );
+    drawValue(context, front, size, value);
   }
 
   /**
@@ -232,13 +360,6 @@
     canvas.style.height = `${size}px`;
     host.appendChild(canvas);
 
-    if (value) {
-      const label = document.createElement('span');
-      label.className = 'dice3d__value';
-      label.textContent = value;
-      host.appendChild(label);
-    }
-
     const context = canvas.getContext('2d');
     if (!context) return null;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -246,22 +367,23 @@
     const started = performance.now();
     const spin = mini ? 900 : 1250;
     const idle = mini ? 900 : 3200;
-    const baseX = mini ? -0.4 : -0.28;
-    const baseY = mini ? 0.6 : 0.48;
+    const finalX = mini ? -0.4 : -0.32;
+    const finalY = mini ? 0.6 : 0.58;
+    const finalZ = mini ? 0 : 0.04;
+    const showFrom = spin / 1000;
     let frame = 0;
 
     const tick = (now) => {
       if (!host.isConnected) return;
       const elapsed = (now - started) / 1000;
-      const spinLeft = Math.max(0, 1 - elapsed / (spin / 1000));
-      const ax = baseX
-        + Math.sin(elapsed * 1.3) * 0.1
-        + spinLeft * Math.sin(elapsed * 26) * 1.7;
-      const ay = baseY
-        + elapsed * 0.42
-        + spinLeft * Math.cos(elapsed * 21) * 2.2;
-      const az = Math.sin(elapsed * 0.8) * 0.08 + spinLeft * Math.sin(elapsed * 17) * 0.4;
-      draw(context, shape, size, ax, ay, az);
+      // Затухающая спираль вокруг финального положения: в конце цифра
+      // садится на конкретную грань и больше не прыгает между ними.
+      const left = Math.max(0, 1 - elapsed / showFrom);
+      const ax = finalX + Math.sin(elapsed * 19) * 1.5 * left;
+      const ay = finalY + Math.cos(elapsed * 15) * 2.1 * left + elapsed * 2.6 * left;
+      const az = finalZ + Math.sin(elapsed * 13) * 0.42 * left;
+      const showValue = !mini && Boolean(value) && elapsed >= showFrom;
+      draw(context, shape, size, ax, ay, az, value, showValue);
       if (now - started < idle) {
         frame = requestAnimationFrame(tick);
       }
