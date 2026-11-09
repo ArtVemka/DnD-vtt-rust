@@ -136,7 +136,8 @@ async function evaluate(client, expression) {
       return errors;
     })()`);
     if (actionErrors.length) console.log('ui actions:', actionErrors);
-    await sleep(scene === 'dice' ? 2600 : 700);
+    const wait = Number(process.env.DND_UI_WAIT || 0);
+    await sleep(wait > 0 ? wait : (scene === 'dice' ? 2600 : 700));
 
     const shot = await client.send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync(out, Buffer.from(shot.data, 'base64'));

@@ -129,11 +129,15 @@
     return [x, y, z];
   }
 
-  function project(vertex, size) {
+  function project(vertex, size, lift = 0) {
     const camera = 3.4;
     const factor = camera / (camera - vertex[2]);
-    const scale = size * 0.42;
-    return [size / 2 + vertex[0] * scale * factor, size / 2 - vertex[1] * scale * factor];
+    // Подброшенная кость ближе к камере: чуть крупнее и выше на экране.
+    const scale = size * 0.42 * (1 + lift * 0.06);
+    return [
+      size / 2 + vertex[0] * scale * factor,
+      size / 2 - lift * size * 0.45 - vertex[1] * scale * factor
+    ];
   }
 
   function shade(intensity) {
@@ -299,7 +303,7 @@
     context.restore();
   }
 
-  function draw(context, shape, size, ax, ay, az, value, showValue, target) {
+  function draw(context, shape, size, ax, ay, az, value, showValue, target, lift = 0) {
     context.clearRect(0, 0, size, size);
 
     const glow = context.createRadialGradient(
@@ -311,16 +315,18 @@
     context.fillStyle = glow;
     context.fillRect(0, 0, size, size);
 
-    // Тень под костью.
+    // Тень на столе: пока кость в воздухе, она шире и мягче.
+    const air = Math.max(0, Math.min(1, lift));
     context.save();
     context.translate(size / 2, size * 0.88);
     context.scale(1, 0.28);
-    const shadow = context.createRadialGradient(0, 0, 0, 0, 0, size * 0.36);
-    shadow.addColorStop(0, 'rgba(0, 0, 0, 0.42)');
+    const shadowRadius = size * (0.30 + 0.14 * air);
+    const shadow = context.createRadialGradient(0, 0, 0, 0, 0, shadowRadius);
+    shadow.addColorStop(0, `rgba(0, 0, 0, ${0.46 * (1 - 0.55 * air)})`);
     shadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     context.fillStyle = shadow;
     context.beginPath();
-    context.arc(0, 0, size * 0.36, 0, Math.PI * 2);
+    context.arc(0, 0, shadowRadius, 0, Math.PI * 2);
     context.fill();
     context.restore();
 
@@ -341,7 +347,7 @@
 
     const line = Math.max(1, size * 0.014);
     for (const face of faces) {
-      const projected = face.points.map((point) => project(point, size));
+      const projected = face.points.map((point) => project(point, size, lift));
       face.projected = projected;
       face.area = polygonArea(projected);
       context.beginPath();
@@ -409,30 +415,94 @@
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
     const started = performance.now();
-    const spin = mini ? 900 : 1250;
-    const idle = mini ? 900 : 3200;
     const target = 0;
     const final = finalOrientation(shape, target);
     // Лёгкий наклон: грань остаётся к игроку, но у куба и тетраэдра
     // появляется глубина, а не фронтальный квадрат.
-    const finalX = final.ax + 0.14;
-    const finalY = final.ay + 0.2;
+    const finalX = final.ax + (mini ? 0.06 : 0.14);
+    const finalY = final.ay + (mini ? 0.08 : 0.2);
     const finalZ = final.az;
-    const showFrom = spin / 1000;
+    const settleTime = mini ? 0.26 : 0.42;
+
+    // Кость подбрасывается, летит по гравитации, отскакивает и теряет
+    // вращение от трения о стол. Начальная закрутка случайна по оси, поэтому
+    // каждый бросок падает по-своему.
+    const GRAVITY = 18;
+    const RESTITUTION = 0.45;
+    const AIR_DRAG = 0.8;
+    const TABLE_DRAG = 7;
+    const state = {
+      ax: 0,
+      ay: 0,
+      az: 0,
+      height: 0,
+      velocity: mini ? 2.7 : 3.2,
+      wx: (Math.random() * 2 - 1) * 13,
+      wy: (Math.random() * 2 - 1) * 15,
+      wz: (Math.random() * 2 - 1) * 8
+    };
+    let last = started;
+    let restAt = 0;
     let frame = 0;
+
+    // Кратчайший поворот между углами, чтобы доводка не крутила лишний оборот.
+    const shortest = (from, to) => {
+      let delta = (to - from) % (Math.PI * 2);
+      if (delta > Math.PI) delta -= Math.PI * 2;
+      if (delta < -Math.PI) delta += Math.PI * 2;
+      return delta;
+    };
 
     const tick = (now) => {
       if (!host.isConnected) return;
       const elapsed = (now - started) / 1000;
-      // Затухающая спираль вокруг финального положения: в конце цифра
-      // садится на конкретную грань и больше не прыгает между ними.
-      const left = Math.max(0, 1 - elapsed / showFrom);
-      const ax = finalX + Math.sin(elapsed * 19) * 1.5 * left;
-      const ay = finalY + Math.cos(elapsed * 15) * 2.1 * left + elapsed * 2.6 * left;
-      const az = finalZ + Math.sin(elapsed * 13) * 0.42 * left;
-      const showValue = !mini && Boolean(value) && elapsed >= showFrom;
-      draw(context, shape, size, ax, ay, az, value, showValue, target);
-      if (now - started < idle) {
+      let remaining = Math.min(0.05, (now - last) / 1000);
+      last = now;
+
+      while (remaining > 0) {
+        const step = Math.min(remaining, 1 / 120);
+        remaining -= step;
+        const air = state.height > 0.001 || state.velocity > 0;
+        const decay = Math.exp(-(air ? AIR_DRAG : TABLE_DRAG) * step);
+        state.wx *= decay;
+        state.wy *= decay;
+        state.wz *= decay;
+        state.ax += state.wx * step;
+        state.ay += state.wy * step;
+        state.az += state.wz * step;
+
+        state.velocity -= GRAVITY * step;
+        state.height += state.velocity * step;
+        if (state.height <= 0) {
+          state.height = 0;
+          if (state.velocity < -0.7) {
+            // Удар: скорость вверх и вращение гасятся столом.
+            state.velocity = -state.velocity * RESTITUTION;
+            state.wx *= 0.5;
+            state.wy *= 0.5;
+            state.wz *= 0.5;
+          } else {
+            state.velocity = 0;
+            if (!restAt) restAt = elapsed;
+          }
+        }
+      }
+
+      // Если окно было свёрнуто и кадры не шли, не ждём физику вечно:
+      // доводим кость к грани по времени.
+      if (!restAt && elapsed > (mini ? 1.1 : 1.6)) restAt = elapsed;
+
+      // Доводка к выигравшей грани идёт как трение: быстро в начале,
+      // плавно в конце.
+      const settle = restAt ? Math.min(1, (elapsed - restAt) / settleTime) : 0;
+      const eased = 1 - (1 - settle) ** 3;
+      const ax = state.ax + shortest(state.ax, finalX) * eased;
+      const ay = state.ay + shortest(state.ay, finalY) * eased;
+      const az = state.az + shortest(state.az, finalZ) * eased;
+      const showValue = !mini && Boolean(value) && settle >= 1;
+      draw(context, shape, size, ax, ay, az, value, showValue, target, state.height);
+
+      if (settle < 1 && elapsed < 6) {
         frame = requestAnimationFrame(tick);
       }
     };
