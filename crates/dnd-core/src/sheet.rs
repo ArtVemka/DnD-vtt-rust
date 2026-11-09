@@ -75,7 +75,7 @@ pub const LIMITS: Limits = Limits {
     max_sheet_text_length: 4000,
     max_image_bytes: 10 * 1024 * 1024,
     max_avatar_bytes: 2 * 1024 * 1024,
-    max_audio_bytes: 2 * 1024 * 1024,
+    max_audio_bytes: 32 * 1024 * 1024,
     max_dice_history: 200,
     max_initiative_entries: 40,
     max_chat_history: 300,

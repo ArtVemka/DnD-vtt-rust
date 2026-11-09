@@ -115,6 +115,9 @@ fn audio_ext(ext: &str) -> Option<&'static str> {
         "mp3" | "mpeg" => Some("mp3"),
         "ogg" => Some("ogg"),
         "wav" | "x-wav" => Some("wav"),
+        "m4a" | "mp4" => Some("m4a"),
+        "webm" => Some("webm"),
+        "flac" => Some("flac"),
         _ => None,
     }
 }

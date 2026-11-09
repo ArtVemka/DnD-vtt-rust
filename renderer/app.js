@@ -167,6 +167,11 @@ let chosenSheetId = null;
     }, timeout);
   }
 
+  window.addEventListener('dnd-sound-error', (event) => {
+    const message = event && event.detail && event.detail.message;
+    if (message) toast(message, 'error');
+  });
+
   /**
    * Слэш-команды чата: /r бросок, /w шёпот, /hp хиты выбранной фишки,
    * /ac класс брони, /help подсказка.

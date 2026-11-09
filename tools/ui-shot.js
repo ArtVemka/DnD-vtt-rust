@@ -109,12 +109,24 @@ async function evaluate(client, expression) {
     }
     // Give socket join, panels and fonts a moment to settle.
     await sleep(2500);
-    await evaluate(client, `(() => {
-      document.querySelectorAll('.col--left > .panel').forEach((panel) => panel.classList.remove('is-collapsed'));
-      const adventure = document.querySelector('#tabbtn-adventure');
-      if (adventure && !adventure.hidden) adventure.click();
-      DnDTheme.apply('${theme}');
+    const actionErrors = await evaluate(client, `(() => {
+      const errors = [];
+      try {
+        document.querySelectorAll('.col--left > .panel').forEach((panel) => panel.classList.remove('is-collapsed'));
+      } catch (error) { errors.push('panels: ' + error.message); }
+      try {
+        const adventure = document.querySelector('#tabbtn-adventure');
+        if (adventure && !adventure.hidden) adventure.click();
+      } catch (error) { errors.push('adventure: ' + error.message); }
+      try {
+        const sound = document.querySelector('.map-sound__toggle');
+        if (sound) sound.click();
+        else errors.push('sound: no toggle');
+      } catch (error) { errors.push('sound: ' + error.message); }
+      try { DnDTheme.apply('${theme}'); } catch (error) { errors.push('theme: ' + error.message); }
+      return errors;
     })()`);
+    if (actionErrors.length) console.log('ui actions:', actionErrors);
     await sleep(700);
 
     const shot = await client.send('Page.captureScreenshot', { format: 'png' });

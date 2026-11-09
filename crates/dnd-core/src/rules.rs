@@ -966,7 +966,7 @@ pub const LIMITS: Limits = Limits {
     max_token_conditions: 16,
     max_dm_note: 4000,
     max_avatar_bytes: 2 * 1024 * 1024,
-    max_audio_bytes: 2 * 1024 * 1024,
+    max_audio_bytes: 32 * 1024 * 1024,
     min_ability: 1,
     max_ability: 30,
     min_level: 1,

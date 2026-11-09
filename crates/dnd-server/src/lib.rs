@@ -96,8 +96,11 @@ fn mime_for(name: &str) -> &'static str {
         "webp" => "image/webp",
         "gif" => "image/gif",
         "mp3" => "audio/mpeg",
-        "ogg" => "audio/ogg",
+        "ogg" | "oga" => "audio/ogg",
         "wav" => "audio/wav",
+        "m4a" => "audio/mp4",
+        "webm" => "audio/webm",
+        "flac" => "audio/flac",
         _ => "application/octet-stream",
     }
 }

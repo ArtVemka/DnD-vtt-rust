@@ -205,7 +205,9 @@ impl Table {
 /// Builds the Socket.IO layer and registers the handshake.
 pub fn create_io(table: Arc<Table>) -> (socketioxide::layer::SocketIoLayer, SocketIo) {
     let (layer, io) = SocketIo::builder()
-        .max_payload(20 * 1024 * 1024)
+        .max_payload(48 * 1024 * 1024)
+        .ws_max_message_size(48 * 1024 * 1024)
+        .ws_max_frame_size(48 * 1024 * 1024)
         .build_layer();
 
     let connect_table = table.clone();

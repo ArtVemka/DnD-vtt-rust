@@ -1568,7 +1568,7 @@
       this.root.appendChild(soundMenu);
       const soundFile = el('input');
       soundFile.type = 'file';
-      soundFile.accept = '.mp3,.ogg,.wav,audio/*';
+      soundFile.accept = '.mp3,.ogg,.wav,.m4a,.webm,.flac,audio/*';
       soundFile.hidden = true;
       soundFile.addEventListener('change', () => this.uploadSoundFile(soundFile));
       this.soundFile = soundFile;
@@ -4076,9 +4076,42 @@
       menu.innerHTML = '';
       const map = this.mapOf(this.viewedMap);
       const board = (this.lastState && this.lastState.soundboard) || [];
+      const limitMb = Math.max(1, Math.round(DnD.LIMITS.maxAudioBytes / 1024 / 1024));
+      const sound = window.DnDSound;
+      if (sound) {
+        const volumeRow = el('div', 'map-sound-menu__volume');
+        volumeRow.appendChild(el('span', 'map-sound-menu__volume-label', 'Громкость'));
+        const range = el('input', 'settings__range');
+        range.type = 'range';
+        range.min = '0';
+        range.max = '100';
+        range.step = '5';
+        range.value = String(Math.round(sound.tableVolume() * 100));
+        range.setAttribute('aria-label', 'Громкость стола');
+        const value = el('span', 'map-sound-menu__volume-value', `${range.value}%`);
+        range.addEventListener('input', () => {
+          sound.setTableVolume(range.value);
+          value.textContent = `${range.value}%`;
+        });
+        volumeRow.appendChild(range);
+        volumeRow.appendChild(value);
+        menu.appendChild(volumeRow);
+        if (!sound.enabled()) {
+          const enableRow = el('div', 'map-sound-menu__enable');
+          enableRow.appendChild(el('span', 'map-grid-menu__note', 'Звук выключен.'));
+          const enable = el('button', 'btn btn--tiny', 'Включить звук');
+          enable.type = 'button';
+          enable.addEventListener('click', () => {
+            sound.setEnabled(true);
+            this.renderSoundMenu();
+          });
+          enableRow.appendChild(enable);
+          menu.appendChild(enableRow);
+        }
+      }
       if (!board.length) {
         menu.appendChild(el('div', 'map-grid-menu__note',
-          'Саундборд пуст: загрузите MP3, OGG или WAV не больше 2 МБ.'));
+          `Саундборд пуст: загрузите MP3, OGG, WAV, M4A, WEBM или FLAC не больше ${limitMb} МБ.`));
       }
       for (const item of board) {
         const row = el('div', 'map-grid-menu__row map-sound-menu__row');
@@ -4089,10 +4122,20 @@
         play.title = 'Кю услышит весь стол';
         play.addEventListener('click', () => this.playSoundCue(item.ref, 'play'));
         row.appendChild(play);
-        const loop = el('button', 'btn btn--tiny', 'Петля');
+        const resolved = this.handlers.resolveUrl ? this.handlers.resolveUrl(item.ref) : item.ref;
+        const looping = Boolean(sound && sound.isLooping(resolved));
+        const loop = el('button', `btn btn--tiny${looping ? ' is-active' : ''}`,
+          looping ? 'Петля: вкл' : 'Петля');
         loop.type = 'button';
-        loop.title = 'Зациклить: играет, пока мастер не остановит';
-        loop.addEventListener('click', () => this.playSoundCue(item.ref, 'loop'));
+        loop.title = looping
+          ? 'Остановить зацикленный звук'
+          : 'Зациклить: играет, пока мастер не остановит';
+        loop.addEventListener('click', () => {
+          const next = !loop.classList.contains('is-active');
+          loop.classList.toggle('is-active', next);
+          loop.textContent = next ? 'Петля: вкл' : 'Петля';
+          this.playSoundCue(item.ref, next ? 'loop' : 'stop');
+        });
         row.appendChild(loop);
         const ambience = el('button', 'btn btn--tiny', ambient ? 'Эмбиент: да' : 'Эмбиент');
         ambience.type = 'button';
@@ -4120,11 +4163,11 @@
       menu.appendChild(stopAll);
       const upload = el('button', 'btn btn--accent btn--tiny', 'Загрузить звук…');
       upload.type = 'button';
-      upload.title = 'MP3, OGG или WAV не больше 2 МБ';
+      upload.title = `MP3, OGG, WAV, M4A, WEBM или FLAC не больше ${limitMb} МБ`;
       upload.addEventListener('click', () => this.soundFile.click());
       menu.appendChild(upload);
       menu.appendChild(el('div', 'map-grid-menu__note',
-        'В бою фон карты уступает место боевому лупу — с кроссфейдом.'));
+        `Звуки хранятся в кампании и занимают её место. Лимит одного файла — ${limitMb} МБ.`));
     }
 
     /** Кю из панели: нажал мастер — играет его окно сразу, стол получает ссылку. */

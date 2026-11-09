@@ -526,3 +526,36 @@ body {
   border-color: var(--ref-gold);
   color: #fff0cf;
 }
+
+/* Громкость прямо в меню саундборда. */
+.map-sound-menu__volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 2px 8px;
+}
+
+.map-sound-menu__volume .settings__range {
+  flex: 1;
+  min-width: 90px;
+}
+
+.map-sound-menu__volume-label {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.map-sound-menu__volume-value {
+  min-width: 38px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.map-sound-menu__enable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px 8px;
+}

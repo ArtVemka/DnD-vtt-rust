@@ -119,13 +119,13 @@ pub fn sniff_audio_format(buffer: &[u8]) -> MediaFormat {
         return MediaFormat::supported("wav", "WAV");
     }
     if buffer.len() >= 4 && ascii_at(buffer, 0..4) == b"fLaC" {
-        return MediaFormat::unsupported("flac", "FLAC");
+        return MediaFormat::supported("flac", "FLAC");
     }
     if buffer.len() >= 12 && ascii_at(buffer, 4..8) == b"ftyp" {
-        return MediaFormat::unsupported("m4a", "MP4/M4A");
+        return MediaFormat::supported("m4a", "M4A");
     }
     if buffer.len() >= 4 && at(buffer, 0..4) == [0x1a, 0x45, 0xdf, 0xa3] {
-        return MediaFormat::unsupported("webm", "WEBM");
+        return MediaFormat::supported("webm", "WEBM");
     }
     if buffer.len() >= 12
         && ascii_at(buffer, 0..4) == b"FORM"
@@ -218,13 +218,13 @@ pub fn decode_audio(data_url: Option<&str>) -> Result<DecodedMedia, String> {
         return Err("Звук не передан".to_string());
     }
     let Some(parsed) = parse_data_url(value, "audio") else {
-        return Err("Поддерживаются только аудио MP3, OGG и WAV".to_string());
+        return Err("Поддерживаются только аудио MP3, OGG, WAV, M4A, WEBM и FLAC".to_string());
     };
     if !matches!(
         parsed.mime.as_str(),
-        "mpeg" | "mp3" | "ogg" | "wav" | "x-wav"
+        "mpeg" | "mp3" | "ogg" | "wav" | "x-wav" | "mp4" | "m4a" | "x-m4a" | "webm" | "flac"
     ) {
-        return Err("Поддерживаются только аудио MP3, OGG и WAV".to_string());
+        return Err("Поддерживаются только аудио MP3, OGG, WAV, M4A, WEBM и FLAC".to_string());
     }
     let Some(bytes) = decode_base64(parsed.body) else {
         return Err("Файл пустой".to_string());
@@ -242,10 +242,10 @@ pub fn decode_audio(data_url: Option<&str>) -> Result<DecodedMedia, String> {
     if !format.supported {
         if let Some(label) = format.label {
             return Err(format!(
-                "Формат {label} не поддерживается. Сохраните звук как MP3, OGG или WAV."
+                "Формат {label} не поддерживается. Сохраните звук как MP3, OGG, WAV, M4A, WEBM или FLAC."
             ));
         }
-        return Err("Файл не является аудио MP3, OGG или WAV.".to_string());
+        return Err("Файл не является аудио MP3, OGG, WAV, M4A, WEBM или FLAC.".to_string());
     }
     Ok(DecodedMedia {
         bytes,
@@ -349,13 +349,18 @@ mod tests {
     }
 
     #[test]
-    fn sniffs_audio_and_rejects_flac() {
+    fn sniffs_audio_formats() {
         assert_eq!(sniff_audio_format(MP3).ext, Some("mp3"));
         assert_eq!(sniff_audio_format(OGG).ext, Some("ogg"));
         assert_eq!(sniff_audio_format(WAV).ext, Some("wav"));
+        assert!(sniff_audio_format(FLAC).supported);
+        assert_eq!(sniff_audio_format(FLAC).ext, Some("flac"));
         assert_eq!(sniff_audio_format(FLAC).label, Some("FLAC"));
-        assert_eq!(sniff_audio_format(M4A).label, Some("MP4/M4A"));
-        assert_eq!(sniff_audio_format(WEBM).label, Some("WEBM"));
+        assert!(sniff_audio_format(M4A).supported);
+        assert_eq!(sniff_audio_format(M4A).ext, Some("m4a"));
+        assert!(sniff_audio_format(WEBM).supported);
+        assert_eq!(sniff_audio_format(WEBM).ext, Some("webm"));
+        assert!(!sniff_audio_format(AIFF).supported);
         assert_eq!(sniff_audio_format(AIFF).label, Some("AIFF"));
     }
 
@@ -365,8 +370,14 @@ mod tests {
         let decoded = decode_audio(Some(&url)).expect("wav");
         assert_eq!(decoded.ext, "wav");
         assert_eq!(
-            decode_audio(Some(&data_url("audio", "wav", FLAC))).unwrap_err(),
-            "Формат FLAC не поддерживается. Сохраните звук как MP3, OGG или WAV."
+            decode_audio(Some(&data_url("audio", "flac", FLAC)))
+                .expect("flac")
+                .ext,
+            "flac"
+        );
+        assert_eq!(
+            decode_audio(Some(&data_url("audio", "wav", AIFF))).unwrap_err(),
+            "Формат AIFF не поддерживается. Сохраните звук как MP3, OGG, WAV, M4A, WEBM или FLAC."
         );
         assert_eq!(decode_audio(None).unwrap_err(), "Звук не передан");
     }

@@ -715,7 +715,7 @@
   const tableSingles = new Map();
   let tableOut = null;
   let tableBg = null;
-  let tableFocus = 0;
+  let hiddenLoops = [];
   let tableAmbientUrl = '';
   let tableCombatOn = false;
   /** @type {{ctx: AudioContext, source: MediaElementAudioSourceNode, gain: GainNode, el: HTMLAudioElement, url: string}|null} */
@@ -766,13 +766,15 @@
     return tableBg;
   }
 
-  /** Музыка звучит — фон прижимается к 15%, стихла — возвращается. */
-  function tableDuck(delta) {
-    tableFocus = Math.max(0, tableFocus + delta);
+  /** Музыка звучит — фон прижимается к 15%, стихла — возвращается.
+   *  Считаем по фактическим картам слоёв, а не инкрементом: тогда
+   *  завершившиеся и ошибочные кю не оставляют фон приглушённым. */
+  function refreshTableDuck() {
     const bg = tableBackOut();
     if (!bg) return;
+    const active = tableCueLoops.size + tableSingles.size;
     const now = bg.context.currentTime;
-    const target = tableFocus > 0 ? 0.15 : 1;
+    const target = active > 0 ? 0.15 : 1;
     bg.gain.cancelScheduledValues(now);
     bg.gain.setValueAtTime(bg.gain.value, now);
     bg.gain.linearRampToValueAtTime(target, now + 0.5);
@@ -791,22 +793,86 @@
     const dest = bg ? tableBackOut() : tableOutput();
     if (!ctx || !dest) return null;
     try {
-      const el = new Audio(url);
+      // Звук идёт с http://127.0.0.1, а окно живёт на tauri://localhost.
+      // Без CORS медиа-элемент отдаёт в WebAudio тишину, даже если файл
+      // скачался. crossOrigin обязан стоять до src.
+      const el = new Audio();
+      el.crossOrigin = 'anonymous';
+      el.preload = 'auto';
       el.loop = loop;
+      el.src = url;
       const source = ctx.createMediaElementSource(el);
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(level, ctx.currentTime);
       source.connect(gain).connect(dest);
-      el.play().catch(() => { /* декодер ещё шуршит: не страшно */ });
-      return { ctx, source, gain, el, url };
+      const layer = {
+        ctx,
+        source,
+        gain,
+        el,
+        url,
+        done: false,
+        needsRetry: false,
+        onDone: null,
+        onError: null
+      };
+      el.addEventListener('ended', () => finishLayer(layer));
+      el.addEventListener('error', () => failLayer(layer));
+      return layer;
     } catch {
       return null;
     }
   }
 
+  /** Запускает слой и запоминает отказ автоплея для повтора на первом жесте. */
+  function startLayer(layer) {
+    if (!layer || layer.done) return;
+    layer.needsRetry = false;
+    layer.el.play().catch(() => {
+      layer.needsRetry = true;
+    });
+  }
+
+  /** Повторяет play() у слоя, который браузер остановил до жеста. */
+  function resumeLayer(layer) {
+    if (!layer || layer.done) return;
+    if (layer.el.paused) startLayer(layer);
+  }
+
+  /** Завершение слоя: снять узлы и отдать событие владельцу карты. */
+  function finishLayer(layer) {
+    if (!layer || layer.done) return;
+    layer.done = true;
+    try { layer.source.disconnect(); } catch { /* уже отключён */ }
+    try { layer.gain.disconnect(); } catch { /* уже отключён */ }
+    if (typeof layer.onDone === 'function') layer.onDone();
+  }
+
+  function failLayer(layer) {
+    if (!layer || layer.done) return;
+    layer.done = true;
+    try { layer.source.disconnect(); } catch { /* уже отключён */ }
+    try { layer.gain.disconnect(); } catch { /* уже отключён */ }
+    if (typeof layer.onError === 'function') layer.onError();
+    const name = (layer.url || '').split('/').pop() || 'звук';
+    try {
+      global.dispatchEvent(new CustomEvent('dnd-sound-error', {
+        detail: { message: `Не удалось воспроизвести «${name}»` }
+      }));
+    } catch { /* событие необязательно */ }
+  }
+
+  /** Повторяет все слои после первого жеста или возврата окна. */
+  function resumeTableAudio() {
+    resumeLayer(tableFileLoop);
+    for (const layer of tableCueLoops.values()) resumeLayer(layer);
+    for (const layer of tableSingles.values()) resumeLayer(layer);
+  }
+
   /** Останавливает медиа-элемент слоя: то, что раньше делал source.stop(). */
   function stopLayer(layer) {
     if (!layer) return;
+    layer.done = true;
     try { layer.el.pause(); } catch { /* уже остановлен */ }
     try { layer.el.removeAttribute('src'); } catch { /* уже чисто */ }
     try { layer.source.disconnect(); } catch { /* уже отключён */ }
@@ -839,6 +905,7 @@
     if (!layer) return null;
     const now = layer.ctx.currentTime;
     layer.gain.gain.linearRampToValueAtTime(0.9, now + TABLE_XFADE);
+    startLayer(layer);
     return layer;
   }
 
@@ -917,7 +984,10 @@
     if (want === 'combat') startCombatScene();
     else stopCombatScene();
     const fileWanted = want === 'file' ? tableAmbientUrl : '';
-    if ((tableFileLoop ? tableFileLoop.url : '') === fileWanted) return;
+    if ((tableFileLoop ? tableFileLoop.url : '') === fileWanted) {
+      if (fileWanted) resumeLayer(tableFileLoop);
+      return;
+    }
     if (tableFileLoop) {
       const loop = tableFileLoop;
       tableFileLoop = null;
@@ -948,12 +1018,13 @@
   /** Гасит и снимает с учёта все кю: петли и одиночные. */
   function stopAllCues() {
     const all = [...tableCueLoops.values(), ...tableSingles.values()];
-    for (const loop of all) {
-      fadeOut(loop.ctx, loop.gain, () => stopLayer(loop));
-    }
     tableCueLoops.clear();
     tableSingles.clear();
-    tableDuck(-tableFocus);
+    for (const layer of all) {
+      layer.done = true;
+      fadeOut(layer.ctx, layer.gain, () => stopLayer(layer));
+    }
+    refreshTableDuck();
   }
 
   /** На главном экране звук стола молчит: он не должен тонуть в атмосфере. */
@@ -972,34 +1043,79 @@
   function tableCue(url, action = 'play') {
     if (!enabled()) return;
     if (action === 'stop') {
-      const loops = url ? [tableCueLoops.get(url)] : [...tableCueLoops.values()];
-      const singles = url ? [tableSingles.get(url)] : [...tableSingles.values()];
-      for (const loop of [...loops, ...singles]) {
-        if (loop) fadeOut(loop.ctx, loop.gain, () => stopLayer(loop));
-      }
+      const loops = url ? [tableCueLoops.get(url)].filter(Boolean) : [...tableCueLoops.values()];
+      const singles = url ? [tableSingles.get(url)].filter(Boolean) : [...tableSingles.values()];
       if (url) { tableCueLoops.delete(url); tableSingles.delete(url); }
       else { tableCueLoops.clear(); tableSingles.clear(); }
-      tableDuck(-(loops.length + singles.length));
+      for (const layer of [...loops, ...singles]) {
+        layer.done = true;
+        fadeOut(layer.ctx, layer.gain, () => stopLayer(layer));
+      }
+      refreshTableDuck();
       return;
     }
     if (!url) return;
     const layer = tableLayer(url, action === 'loop', 0.9);
     if (!layer) return;
-    tableDuck(1);
-    const finish = () => stopLayer(layer);
+
     if (action === 'loop') {
       const old = tableCueLoops.get(url);
-      if (old) fadeOut(old.ctx, old.gain, () => stopLayer(old));
+      if (old) {
+        old.done = true;
+        fadeOut(old.ctx, old.gain, () => stopLayer(old));
+      }
       const oldSingle = tableSingles.get(url);
-      if (oldSingle) { fadeOut(oldSingle.ctx, oldSingle.gain, () => stopLayer(oldSingle)); tableDuck(-1); }
-      tableSingles.delete(url);
+      if (oldSingle) {
+        oldSingle.done = true;
+        tableSingles.delete(url);
+        fadeOut(oldSingle.ctx, oldSingle.gain, () => stopLayer(oldSingle));
+      }
+      layer.onDone = () => {
+        if (tableCueLoops.get(url) === layer) {
+          tableCueLoops.delete(url);
+          refreshTableDuck();
+        }
+      };
+      layer.onError = () => {
+        if (tableCueLoops.get(url) === layer) {
+          tableCueLoops.delete(url);
+          refreshTableDuck();
+        }
+      };
       tableCueLoops.set(url, layer);
     } else {
       const oldSingle = tableSingles.get(url);
-      if (oldSingle) { tableSingles.delete(url); tableDuck(-1); fadeOut(oldSingle.ctx, oldSingle.gain, () => stopLayer(oldSingle)); }
-      layer.el.onended = () => { finish(); tableDuck(-1); };
+      if (oldSingle) {
+        oldSingle.done = true;
+        tableSingles.delete(url);
+        fadeOut(oldSingle.ctx, oldSingle.gain, () => stopLayer(oldSingle));
+      }
+      layer.onDone = () => {
+        if (tableSingles.get(url) === layer) {
+          tableSingles.delete(url);
+          refreshTableDuck();
+        }
+      };
+      layer.onError = () => {
+        if (tableSingles.get(url) === layer) {
+          tableSingles.delete(url);
+          refreshTableDuck();
+        }
+      };
       tableSingles.set(url, layer);
     }
+    startLayer(layer);
+    refreshTableDuck();
+  }
+
+  /** @param {string} ref @returns {boolean} играет ли петля этого звука */
+  function isLooping(ref) {
+    return tableCueLoops.has(ref);
+  }
+
+  /** @returns {string[]} ссылки активных петель */
+  function loopRefs() {
+    return [...tableCueLoops.keys()];
   }
 
   /**
@@ -1029,6 +1145,7 @@
     ambientUnlocked = true;
     startAmbient();
     applyTableAmbience();
+    resumeTableAudio();
   };
   document.addEventListener('pointerdown', unlock, { once: true, capture: true });
   document.addEventListener('keydown', unlock, { once: true, capture: true });
@@ -1037,6 +1154,7 @@
   // с окном. Проба из настроек тоже прерывается и продолжается.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      hiddenLoops = [...tableCueLoops.keys()];
       stopAmbient();
       // Свёрнутый стол тоже не должен шуметь: слои гаснем, ссылки помним —
       // и на возврате applyTableAmbience() поднимет их заново.
@@ -1046,6 +1164,9 @@
     if (previewTimer) startAmbient(true);
     else if (ambientScene === 'home') startAmbient();
     if (ambientScene !== 'home') applyTableAmbience();
+    for (const ref of hiddenLoops) tableCue(ref, 'loop');
+    hiddenLoops = [];
+    resumeTableAudio();
   });
 
   // Тема сменилась на главном экране: старую атмосферу гасим, новую
@@ -1081,6 +1202,8 @@
     tableVolume,
     setTableVolume,
     tableCue,
+    isLooping,
+    loopRefs,
     setTableAmbient,
     setTableCombat
   };
