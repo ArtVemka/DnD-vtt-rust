@@ -7136,9 +7136,15 @@
       const tumbler = el('span', 'dice__tumbler');
       tumbler.dataset.count = String(count);
       for (let index = 0; index < count; index += 1) {
-        const die = el('span', `dice__tumbler-die dice__tumbler-die--d${sides}`, `d${sides}`);
+        const die = el('span', `dice__tumbler-die dice__tumbler-die--d${sides}`);
         // Разный ритм у каждой кости: синхронные кубики выглядят как гифка.
         die.style.setProperty('--tumble-i', String(index));
+        if (window.DnDDice3D) {
+          die.classList.add('dice3d-host', 'dice3d-host--mini');
+          window.DnDDice3D.mount(die, sides, '', { size: 30, mini: true });
+        } else {
+          die.textContent = `d${sides}`;
+        }
         tumbler.appendChild(die);
       }
       if (parsed.ok && parsed.count > count) {
@@ -7187,9 +7193,13 @@
       const single = known && values.length === 1 && sides;
       const value = el('span',
         `dice__last-value${single ? ` is-die dice__last-value--d${sides}` : ''}`,
-        known ? String(roll.result) : '?');
+        single ? '' : (known ? String(roll.result) : '?'));
       if (!known) value.classList.add('is-secret');
       value.classList.add('is-pop');
+      if (single && window.DnDDice3D) {
+        value.classList.add('dice3d-host');
+        window.DnDDice3D.mount(value, sides, String(roll.result), { size: 120 });
+      }
       this.last.appendChild(value);
       // Исход проверки: «попадание по КД 12», «успех (СЛ 15)». Раньше это
       // писала строка чата, теперь бросок объясняет себя сам.

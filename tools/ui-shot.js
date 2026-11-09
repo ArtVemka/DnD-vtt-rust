@@ -109,25 +109,34 @@ async function evaluate(client, expression) {
     }
     // Give socket join, panels and fonts a moment to settle.
     await sleep(2500);
+    const scene = process.env.DND_UI_SCENE || 'table';
     const actionErrors = await evaluate(client, `(() => {
       const errors = [];
       try {
         document.querySelectorAll('.col--left > .panel').forEach((panel) => panel.classList.remove('is-collapsed'));
       } catch (error) { errors.push('panels: ' + error.message); }
       try {
-        const adventure = document.querySelector('#tabbtn-adventure');
-        if (adventure && !adventure.hidden) adventure.click();
-      } catch (error) { errors.push('adventure: ' + error.message); }
-      try {
-        const sound = document.querySelector('.map-sound__toggle');
-        if (sound) sound.click();
-        else errors.push('sound: no toggle');
-      } catch (error) { errors.push('sound: ' + error.message); }
+        if ('${scene}' === 'dice') {
+          const tab = document.querySelector('#tabbtn-dice');
+          if (tab) tab.click();
+          const dieSide = '${process.env.DND_UI_DIE || 'd20'}'.toLowerCase();
+          const button = [...document.querySelectorAll('.dice__quick-btn')]
+            .find((item) => item.textContent.trim().toLowerCase() === dieSide);
+          if (button) button.click();
+          else errors.push('dice: no ' + dieSide + ' button');
+        } else {
+          const adventure = document.querySelector('#tabbtn-adventure');
+          if (adventure && !adventure.hidden) adventure.click();
+          const sound = document.querySelector('.map-sound__toggle');
+          if (sound) sound.click();
+          else errors.push('sound: no toggle');
+        }
+      } catch (error) { errors.push('scene: ' + error.message); }
       try { DnDTheme.apply('${theme}'); } catch (error) { errors.push('theme: ' + error.message); }
       return errors;
     })()`);
     if (actionErrors.length) console.log('ui actions:', actionErrors);
-    await sleep(700);
+    await sleep(scene === 'dice' ? 2600 : 700);
 
     const shot = await client.send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync(out, Buffer.from(shot.data, 'base64'));
