@@ -749,13 +749,20 @@ fn open_context_window(
         "window.{bridge} = {{ isElectron: true, getContext: () => window.__TAURI__.core.invoke('window_context', {{ id: '{id}' }}) }};"
     );
     let label = format!("{kind}-{id}");
-    match WebviewWindowBuilder::new(app, &label, WebviewUrl::App(page.into()))
+    let built = WebviewWindowBuilder::new(app, &label, WebviewUrl::App(page.into()))
         .title(title)
-        .inner_size(900.0, 760.0)
-        .min_inner_size(520.0, 420.0)
-        .initialization_script(&script)
-        .build()
-    {
+        .icon(
+            tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                .expect("embedded window icon"),
+        )
+        .and_then(|builder| {
+            builder
+                .inner_size(900.0, 760.0)
+                .min_inner_size(520.0, 420.0)
+                .initialization_script(&script)
+                .build()
+        });
+    match built {
         Ok(_) => json!({ "ok": true }),
         Err(error) => fail(error.to_string()),
     }
@@ -1023,21 +1030,8 @@ async fn adventure_import(
 }
 
 fn tray_image() -> tauri::image::Image<'static> {
-    let size = 32u32;
-    let mut rgba = Vec::with_capacity((size * size * 4) as usize);
-    for y in 0..size {
-        for x in 0..size {
-            let dx = x as i32 - 16;
-            let dy = y as i32 - 16;
-            let color = if dx * dx + dy * dy <= 14 * 14 {
-                [201, 111, 74, 255]
-            } else {
-                [0, 0, 0, 0]
-            };
-            rgba.extend_from_slice(&color);
-        }
-    }
-    tauri::image::Image::new_owned(rgba, size, size)
+    tauri::image::Image::from_bytes(include_bytes!("../icons/32x32.png"))
+        .expect("embedded tray icon")
 }
 
 fn show_window(app: &tauri::AppHandle) {
@@ -1128,6 +1122,10 @@ fn main() {
             let window =
                 WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
                     .title("D&D Стол")
+                    .icon(
+                        tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))
+                            .expect("embedded window icon"),
+                    )?
                     .inner_size(1280.0, 800.0)
                     .min_inner_size(960.0, 640.0)
                     .initialization_script(include_str!("bridge.js"))
