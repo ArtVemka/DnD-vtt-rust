@@ -31,18 +31,16 @@ jobs:
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft \
             --title "DnD Table $RELEASE_TAG" --notes "$NOTES"
 
+  # Windows-раннеры на этом аккаунте не стартуют (GitHub отдаёт internal
+  # server error), поэтому Windows-сборка делается локально и загружается
+  # в черновик релиза перед запуском этого workflow.
   build:
     needs: prepare
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-latest, ubuntu-22.04]
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
       - name: Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -66,10 +64,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: npx --yes @tauri-apps/cli@2 build
-
-      - name: Portable archive (Windows)
-        if: matrix.platform == 'windows-latest'
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/portable.ps1
 
       - name: Upload assets
         shell: bash
