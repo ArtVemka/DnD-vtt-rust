@@ -2053,12 +2053,6 @@
       this.partyHud = el('div', 'party-hud');
       this.root.appendChild(this.partyHud);
 
-      // Мини-лог последних бросков: у карты он читается быстрее, чем полная
-      // история на вкладке кубиков. Пишет сюда любой приходящий результат.
-      this.combatLog = el('div', 'map-log');
-      this.combatLogItems = [];
-      this.root.appendChild(this.combatLog);
-
       this.image.addEventListener('load', () => {
         this.layoutSurface();
         // После загрузки картинки меняется размер подложки, а с ним и холсты
@@ -5522,25 +5516,6 @@
         rows += 1;
       }
       hud.hidden = rows === 0;
-    }
-
-    /**
-     * Строка последнего результата броска поверх карты: без DOM-драматики,
-     * только последние шесть входов, новейший внизу.
-     * @param {object} roll событие diceRollResult
-     */
-    pushCombatLog(roll) {
-      if (!this.combatLog || !roll) return;
-      const name = roll.playerName || 'Стол';
-      const verdict = Number.isFinite(Number(roll.result)) && roll.result !== null
-        ? `= ${roll.result}`
-        : '';
-      this.combatLogItems.push(`${name} ${roll.formula}: ${verdict}`);
-      this.combatLogItems = this.combatLogItems.slice(-6);
-      this.combatLog.replaceChildren();
-      for (const line of this.combatLogItems) {
-        this.combatLog.appendChild(el('div', 'map-log__line', line));
-      }
     }
 
     renderBody() {

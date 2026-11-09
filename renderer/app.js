@@ -1732,7 +1732,6 @@ let chosenSheetId = null;
         app.room.diceHistory.splice(0, app.room.diceHistory.length - HISTORY_LIMITS.dice);
       }
       dicePanel.append(roll);
-      if (mapView) mapView.pushCombatLog(roll);
       // Строку о броске в чат добавляет сервер (событие chatMessage),
       // поэтому у всех клиентов история чата совпадает.
     });
