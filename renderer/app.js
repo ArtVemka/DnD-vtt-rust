@@ -6725,6 +6725,9 @@ let chosenSheetId = null;
       const updateButton = el('button', 'btn btn--tiny', 'Проверить обновления');
       updateButton.type = 'button';
       updateButton.dataset.setting = 'check-updates';
+      const installButton = el('button', 'btn btn--tiny', 'Установить');
+      installButton.type = 'button';
+      installButton.hidden = true;
       const updateStatus = el('span', 'settings__value settings__update-status',
         `Версия ${config.versionLabel || config.version || '—'}`);
       updateButton.addEventListener('click', async () => {
@@ -6735,29 +6738,48 @@ let chosenSheetId = null;
           if (!result || !result.ok) {
             updateStatus.textContent = (result && result.error)
               || 'Не удалось проверить обновления.';
+            installButton.hidden = true;
             return;
           }
-          if (result.state === 'latest') {
-            updateStatus.textContent = `Установлена последняя версия ${result.version}.`;
-          } else if (result.state === 'downloading') {
-            updateStatus.textContent = `Скачивается версия ${result.version}…`;
-          } else if (result.state === 'downloaded') {
-            updateStatus.textContent = `Версия ${result.version} скачана. Перезапустите игру.`;
-          } else {
-            updateStatus.textContent = 'Проверка уже идёт…';
+          if (!result.version) {
+            updateStatus.textContent = `Установлена последняя версия ${config.versionLabel || config.version || ''}.`;
+            installButton.hidden = true;
+            return;
           }
+          updateStatus.textContent = `Доступна версия ${result.version}.`;
+          installButton.hidden = false;
         } catch (error) {
           updateStatus.textContent = 'Не удалось проверить обновления.';
         } finally {
           updateButton.disabled = false;
         }
       });
+      installButton.addEventListener('click', async () => {
+        updateButton.disabled = true;
+        installButton.disabled = true;
+        updateStatus.textContent = 'Скачиваем и устанавливаем…';
+        try {
+          const result = await desktop.installUpdate();
+          if (result && result.error) {
+            updateStatus.textContent = result.error;
+            updateButton.disabled = false;
+            installButton.disabled = false;
+            return;
+          }
+          updateStatus.textContent = 'Обновление установлено. Перезапускаем…';
+        } catch (error) {
+          updateStatus.textContent = 'Не удалось установить обновление.';
+          updateButton.disabled = false;
+          installButton.disabled = false;
+        }
+      });
       updateRow.appendChild(updateButton);
+      updateRow.appendChild(installButton);
       updateRow.appendChild(updateStatus);
       updateBox.appendChild(updateRow);
       updateBox.appendChild(el('div', 'box__note',
-        'Обновления проверяются сами раз в четыре часа. Новая версия скачивается '
-        + 'в фоне, после чего игра предложит перезапуск.'));
+        'Проверка идёт при запуске и по кнопке. Кампании и настройки лежат '
+        + 'в отдельной папке и при обновлении не удаляются.'));
       generalPanel.appendChild(updateBox);
     }
 
@@ -8414,6 +8436,24 @@ const gridRow = el('div', 'settings__row');
     return;
   }
 
+  /**
+   * Один раз при запуске проверяет, нет ли новой версии, и подсказывает, где
+   * обновиться. Сеть может быть недоступна — тогда просто ждём следующего раза.
+   */
+  async function checkUpdatesOnStart() {
+    if (!desktop || typeof desktop.checkForUpdates !== 'function') return;
+    try {
+      const settings = await desktop.getConfig();
+      if (!settings || !settings.canUpdate) return;
+      const result = await desktop.checkForUpdates();
+      if (result && result.ok && result.version) {
+        toast(`Доступно обновление ${result.version}: Настройки → Обновления`, 'info', 8000);
+      }
+    } catch (error) {
+      // Нет связи с GitHub — не повод показывать ошибку при каждом запуске.
+    }
+  }
+
   bindUi();
   bindImportUi();
   updateConnBadge(false);
@@ -8422,5 +8462,6 @@ const gridRow = el('div', 'settings__row');
   // всё-таки блокирует аудио, атмосфера подхватится на первом жесте.
   if (window.DnDSound) window.DnDSound.setScene('home');
   initHome().catch((error) => toast(`Ошибка запуска: ${error.message}`, 'error'));
+  void checkUpdatesOnStart();
 
 })();

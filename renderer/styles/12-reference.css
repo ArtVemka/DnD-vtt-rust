@@ -7,10 +7,13 @@
 [data-theme] {
   --ref-paper: #ead8b0;
   --ref-paper-2: #d6bb85;
-  --ref-ink: #2b1a0e;
-  --ref-ink-dim: #5c4225;
+  --ref-ink: #241407;
+  --ref-ink-dim: #4a3318;
   --ref-wood: #1a1009;
   --ref-wood-2: #2c1b10;
+  --ref-wood-top: color-mix(in srgb, var(--ref-wood-2) 55%, #000);
+  --ref-wood-deep: color-mix(in srgb, var(--ref-wood) 55%, #000);
+  --ref-wood-hi: color-mix(in srgb, var(--ref-wood-2) 82%, var(--ref-gold));
   --ref-gold: #c9a45e;
   --ref-gold-2: #e7cb92;
 }
@@ -19,43 +22,55 @@
   --ref-paper: #e8d7b2;
   --ref-paper-2: #cfb684;
   --ref-gold: #c7a566;
+  --ref-wood: #0d1420;
+  --ref-wood-2: #1a2434;
 }
 
 [data-theme='les'] {
   --ref-paper: #e3dbb2;
   --ref-paper-2: #c9bd88;
   --ref-gold: #b9a45e;
+  --ref-wood: #0b130d;
+  --ref-wood-2: #17231a;
 }
 
 [data-theme='magiya'] {
   --ref-paper: #e6d6c8;
   --ref-paper-2: #cdb7a5;
   --ref-gold: #c8a878;
+  --ref-wood: #100b18;
+  --ref-wood-2: #1d1530;
 }
 
 [data-theme='okean'] {
   --ref-paper: #dcd8bc;
   --ref-paper-2: #bfb995;
   --ref-gold: #b7a97a;
+  --ref-wood: #07141a;
+  --ref-wood-2: #0f242d;
 }
 
 [data-theme='traktir'] {
   --ref-paper: #ead8b0;
   --ref-paper-2: #d6bb85;
   --ref-gold: #d0a962;
+  --ref-wood: #1a1009;
+  --ref-wood-2: #2c1b10;
 }
 
 [data-theme='par'] {
   --ref-paper: #e4d0a4;
   --ref-paper-2: #cbb07a;
   --ref-gold: #c9a05a;
+  --ref-wood: #16110a;
+  --ref-wood-2: #271c11;
 }
 
 /* ------------------------------------------------------------- Стол */
 
 html,
 body {
-  background-color: #0a0603;
+  background-color: var(--ref-wood-deep);
 }
 
 body {
@@ -77,7 +92,7 @@ body {
       rgba(0, 0, 0, 0.13) 0 2px,
       transparent 2px 11px
     ),
-    linear-gradient(180deg, #1e130a, #0a0603 68%, #150d07);
+    linear-gradient(180deg, var(--ref-wood-top), var(--ref-wood-deep) 68%, var(--ref-wood));
   background-attachment: fixed;
 }
 
@@ -103,7 +118,7 @@ body {
       rgba(255, 220, 160, 0.035) 0 2px,
       transparent 2px 9px
     ),
-    linear-gradient(180deg, #3b2616, #1a1009 72%, #120b06);
+    linear-gradient(180deg, var(--ref-wood-hi), var(--ref-wood) 72%, var(--ref-wood-deep));
   border-bottom: 1px solid color-mix(in srgb, var(--ref-gold) 70%, #000);
   box-shadow:
     0 1px 0 rgba(255, 226, 170, 0.14),
@@ -170,7 +185,7 @@ body {
     color: var(--ref-gold-2);
     background:
       radial-gradient(120% 160% at 50% 0%, rgba(255, 226, 170, 0.14), transparent 60%),
-      linear-gradient(180deg, #2c1b10, #120b06);
+      linear-gradient(180deg, var(--ref-wood-2), var(--ref-wood-deep));
     border: 1px solid color-mix(in srgb, var(--ref-gold) 78%, #000);
     border-radius: 4px 4px 16px 16px / 4px 4px 10px 10px;
     box-shadow:
@@ -242,8 +257,8 @@ body {
      чернила, не требуя отдельных правил на каждый текст. */
   --text: var(--ref-ink);
   --text-dim: var(--ref-ink-dim);
-  --muted: #74562f;
-  --gold: #7a5426;
+  --muted: #5c421f;
+  --gold: #6f4b20;
   --accent: #8a5a1e;
   --accent-hover: #6b4314;
   --accent-soft: rgba(120, 80, 30, 0.18);
@@ -282,13 +297,18 @@ body {
 }
 
 .col--left > .panel > .panel__title {
-  color: #3a2412;
+  color: #241406;
   border-bottom: 1px solid rgba(110, 75, 30, 0.32);
   box-shadow: 0 1px 0 rgba(255, 248, 225, 0.55);
   padding-bottom: 6px;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.13em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 0 rgba(255, 250, 235, 0.45);
+}
+
+.col--left .panel__title--sub {
+  color: #4a3318;
 }
 
 .col--left .panel__fold {
@@ -357,7 +377,7 @@ body {
       rgba(255, 220, 160, 0.025) 0 1px,
       transparent 1px 6px
     ),
-    linear-gradient(180deg, #2c1b10, #140c07);
+    linear-gradient(180deg, var(--ref-wood-2), var(--ref-wood-deep));
   border: 1px solid color-mix(in srgb, var(--ref-gold) 55%, #000);
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.7),
@@ -367,7 +387,7 @@ body {
 }
 
 .tabs__btn {
-  background: linear-gradient(180deg, #3a2416, #1b1009);
+  background: linear-gradient(180deg, var(--ref-wood-top), var(--ref-wood-deep));
   border: 1px solid color-mix(in srgb, var(--ref-gold) 45%, #2a1a0e);
   color: var(--ref-gold-2);
   border-radius: 3px;
@@ -401,15 +421,15 @@ body {
       rgba(255, 220, 160, 0.022) 0 1px,
       transparent 1px 7px
     ),
-    #0a0603;
+    var(--ref-wood-deep);
   border: 12px solid transparent;
   border-image: linear-gradient(
       135deg,
-      #8a6638 0%,
-      #2a180d 26%,
-      #4a3018 52%,
-      #8a6638 78%,
-      #2a180d 100%
+      var(--ref-gold) 0%,
+      color-mix(in srgb, var(--ref-gold) 28%, #000) 26%,
+      color-mix(in srgb, var(--ref-gold) 58%, #000) 52%,
+      var(--ref-gold) 78%,
+      color-mix(in srgb, var(--ref-gold) 24%, #000) 100%
     )
     1;
   box-shadow:
@@ -499,7 +519,7 @@ body {
 }
 
 .map-zoom {
-  background: linear-gradient(180deg, #2c1b10, #120b06);
+  background: linear-gradient(180deg, var(--ref-wood-2), var(--ref-wood-deep));
   border-color: color-mix(in srgb, var(--ref-gold) 65%, #000);
   box-shadow:
     inset 0 1px 0 rgba(255, 226, 170, 0.12),
@@ -516,7 +536,7 @@ body {
 
 .topbar .btn--ghost,
 .col--right .btn--ghost {
-  background: linear-gradient(180deg, rgba(58, 36, 22, 0.9), rgba(20, 12, 7, 0.95));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ref-wood-2) 90%, transparent), color-mix(in srgb, var(--ref-wood-deep) 95%, transparent));
   border-color: color-mix(in srgb, var(--ref-gold) 38%, #2a1a0e);
   color: var(--ref-gold-2);
 }

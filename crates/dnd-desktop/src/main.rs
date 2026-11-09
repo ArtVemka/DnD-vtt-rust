@@ -217,8 +217,8 @@ fn app_config(state: State<'_, AppState>) -> Value {
         "dataDir": state.data_dir.to_string_lossy(),
         "campaignsDir": state.campaigns_dir.to_string_lossy(),
         "portable": state.portable,
-        "platform": "win32",
-        "canUpdate": false,
+        "platform": std::env::consts::OS,
+        "canUpdate": !state.portable,
         "isElectron": true
     })
 }
@@ -234,6 +234,52 @@ fn app_quit(app: tauri::AppHandle, state: State<'_, AppState>) -> Value {
     flush_on_exit(&state);
     app.exit(0);
     json!({ "ok": true })
+}
+
+/// Проверка обновлений через GitHub Releases. Кампании лежат в data-каталоге
+/// и обновление их не трогает: установщик заменяет только файлы приложения.
+#[tauri::command]
+async fn update_check(app: tauri::AppHandle) -> Value {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = match app.updater() {
+        Ok(updater) => updater,
+        Err(error) => return fail(error.to_string()),
+    };
+    match updater.check().await {
+        Ok(Some(update)) => json!({
+            "ok": true,
+            "version": update.version,
+            "current": update.current_version,
+            "notes": update.body
+        }),
+        Ok(None) => json!({ "ok": true, "version": Value::Null }),
+        Err(error) => fail(error.to_string()),
+    }
+}
+
+/// Скачивает и ставит обновление, затем перезапускает приложение.
+/// На Windows установщик сам перезапускает процесс, на Linux это делаем мы.
+#[tauri::command]
+async fn update_install(app: tauri::AppHandle) -> Value {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = match app.updater() {
+        Ok(updater) => updater,
+        Err(error) => return fail(error.to_string()),
+    };
+    let update = match updater.check().await {
+        Ok(Some(update)) => update,
+        Ok(None) => return json!({ "ok": true, "updated": false }),
+        Err(error) => return fail(error.to_string()),
+    };
+    match update.download_and_install(|_, _| {}, || {}).await {
+        Ok(()) => {
+            #[cfg(not(windows))]
+            app.restart();
+            #[cfg(windows)]
+            json!({ "ok": true, "updated": true })
+        }
+        Err(error) => fail(error.to_string()),
+    }
 }
 
 #[tauri::command]
@@ -1082,10 +1128,13 @@ fn main() {
             show_window(app);
         }))
         .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             app_config,
             app_quit,
+            update_check,
+            update_install,
             presence_update,
             app_autosave_interval,
             campaign_list,

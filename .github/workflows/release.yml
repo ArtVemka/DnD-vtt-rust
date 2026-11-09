@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and publish
+        required: true
+        default: v0.2.0
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential curl wget file patchelf \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+            librsvg2-dev libxdo-dev libssl-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .
+
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        with:
+          projectPath: crates/dnd-desktop
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: DnD Table ${{ env.RELEASE_TAG }}
+          releaseBody: |
+            Порт стола D&D 5e на Rust и Tauri 2.
+
+            Установленная версия обновляется сама: проверка при запуске, затем
+            Настройки → Обновления. Кампании и настройки лежат в отдельной папке
+            и при обновлении не удаляются.
+
+            Файлы: установщик и портативная сборка для Windows, AppImage и deb
+            для Linux.
+          releaseDraft: false
+          prerelease: false
+          updaterJsonPreferNsis: true
+          retryAttempts: 2

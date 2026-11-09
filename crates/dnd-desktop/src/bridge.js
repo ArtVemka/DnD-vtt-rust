@@ -27,10 +27,8 @@
     quitApp: () => call('app_quit'),
     setAutosaveInterval: (seconds) => call('app_autosave_interval', { seconds }),
     setPresence: (state) => call('presence_update', { input: state }),
-    checkForUpdates: () => Promise.resolve({
-      ok: false,
-      error: 'Обновления появятся после настройки подписи сборки.'
-    }),
+    checkForUpdates: () => call('update_check'),
+    installUpdate: () => call('update_install'),
 
     listCampaigns: () => call('campaign_list'),
     createCampaign: (name) => call('campaign_create', { name }),

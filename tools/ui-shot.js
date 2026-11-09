@@ -139,6 +139,30 @@ async function evaluate(client, expression) {
     const wait = Number(process.env.DND_UI_WAIT || 0);
     await sleep(wait > 0 ? wait : (scene === 'dice' ? 2600 : 700));
 
+    if (process.env.DND_UI_PROBE) {
+      const info = await evaluate(client, `(async () => {
+        const t = document.querySelector('.col--left .panel__title');
+        const s = t ? getComputedStyle(t) : null;
+        const panel = t ? t.closest('.panel') : null;
+        const ps = panel ? getComputedStyle(panel) : null;
+        let update = null;
+        try {
+          update = await window.desktop.checkForUpdates();
+        } catch (error) {
+          update = { thrown: String(error) };
+        }
+        return JSON.stringify({
+          text: t ? (t.textContent || '').trim() : null,
+          color: s ? s.color : null,
+          weight: s ? s.fontWeight : null,
+          opacity: s ? s.opacity : null,
+          muted: ps ? ps.getPropertyValue('--muted') : null,
+          update
+        });
+      })()`);
+      console.log('probe:', info);
+    }
+
     const shot = await client.send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync(out, Buffer.from(shot.data, 'base64'));
     console.log(out);
