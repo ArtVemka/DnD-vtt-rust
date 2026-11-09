@@ -221,6 +221,53 @@
     return preferred;
   }
 
+  function faceNormal(shape, faceIndex) {
+    const indices = shape.faces[faceIndex];
+    const points = indices.map((index) => shape.vertices[index]);
+    let normal = normalize(cross(subtract(points[1], points[0]), subtract(points[2], points[0])));
+    const centroid = points.reduce(
+      (sum, point) => [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]],
+      [0, 0, 0]
+    ).map((value) => value / points.length);
+    if (dot(normal, centroid) < 0) normal = normal.map((value) => -value);
+    return normal;
+  }
+
+  /**
+   * Поворот, при котором выбранная грань смотрит прямо на игрока.
+   * Сначала нормаль грани приводится к +Z, затем грань доворачивается
+   * вокруг Z так, чтобы её длинное ребро легло горизонтально.
+   */
+  function finalOrientation(shape, faceIndex) {
+    const indices = shape.faces[faceIndex];
+    const points = indices.map((index) => shape.vertices[index]);
+    const normal = faceNormal(shape, faceIndex);
+    const ay = Math.atan2(-normal[0], normal[2]);
+    const ax = Math.atan2(normal[1], Math.hypot(normal[0], normal[2]));
+    const flat = points.map((point) => rotate(point, ax, ay, 0));
+    let edge = null;
+    let longest = 0;
+    for (let index = 0; index < flat.length; index += 1) {
+      const a = flat[index];
+      const b = flat[(index + 1) % flat.length];
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const length = dx * dx + dy * dy;
+      if (length > longest) {
+        longest = length;
+        edge = [dx, dy];
+      }
+    }
+    let az = 0;
+    if (edge) {
+      // Ведём ребро слева направо, чтобы цифра не оказалась вверх ногами.
+      const dx = edge[0] < 0 ? -edge[0] : edge[0];
+      const dy = edge[0] < 0 ? -edge[1] : edge[1];
+      az = -Math.atan2(dy, dx);
+    }
+    return { ax, ay, az };
+  }
+
   function drawValue(context, face, size, value) {
     const points = face.projected;
     const text = String(value);
@@ -252,7 +299,7 @@
     context.restore();
   }
 
-  function draw(context, shape, size, ax, ay, az, value, showValue) {
+  function draw(context, shape, size, ax, ay, az, value, showValue, target) {
     context.clearRect(0, 0, size, size);
 
     const glow = context.createRadialGradient(
@@ -278,8 +325,8 @@
     context.restore();
 
     const rotated = shape.vertices.map((vertex) => rotate(vertex, ax, ay, az));
-    const faces = shape.faces.map((indices) => {
-      const points = indices.map((index) => rotated[index]);
+    const faces = shape.faces.map((indices, index) => {
+      const points = indices.map((vertexIndex) => rotated[vertexIndex]);
       let normal = normalize(cross(subtract(points[1], points[0]), subtract(points[2], points[0])));
       const centroid = points.reduce(
         (sum, point) => [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]],
@@ -289,7 +336,7 @@
       // выглядит тёмным силуэтом с золотым ободком.
       if (dot(normal, centroid) < 0) normal = normal.map((value) => -value);
       const depth = points.reduce((sum, point) => sum + point[2], 0) / points.length;
-      return { points, normal, depth };
+      return { index, points, normal, depth };
     }).sort((left, right) => left.depth - right.depth);
 
     const line = Math.max(1, size * 0.014);
@@ -319,10 +366,7 @@
     }
 
     if (!showValue || !value) return;
-    const candidates = faces.filter((face) => face.normal[2] > 0.08);
-    const front = (candidates.length ? candidates : faces)
-      .slice()
-      .sort((left, right) => (right.area * right.normal[2]) - (left.area * left.normal[2]))[0];
+    const front = faces.find((face) => face.index === target);
     if (!front || !front.projected) return;
     const cx = front.projected.reduce((sum, point) => sum + point[0], 0) / front.projected.length;
     const cy = front.projected.reduce((sum, point) => sum + point[1], 0) / front.projected.length;
@@ -367,9 +411,13 @@
     const started = performance.now();
     const spin = mini ? 900 : 1250;
     const idle = mini ? 900 : 3200;
-    const finalX = mini ? -0.4 : -0.32;
-    const finalY = mini ? 0.6 : 0.58;
-    const finalZ = mini ? 0 : 0.04;
+    const target = 0;
+    const final = finalOrientation(shape, target);
+    // Лёгкий наклон: грань остаётся к игроку, но у куба и тетраэдра
+    // появляется глубина, а не фронтальный квадрат.
+    const finalX = final.ax + 0.14;
+    const finalY = final.ay + 0.2;
+    const finalZ = final.az;
     const showFrom = spin / 1000;
     let frame = 0;
 
@@ -383,7 +431,7 @@
       const ay = finalY + Math.cos(elapsed * 15) * 2.1 * left + elapsed * 2.6 * left;
       const az = finalZ + Math.sin(elapsed * 13) * 0.42 * left;
       const showValue = !mini && Boolean(value) && elapsed >= showFrom;
-      draw(context, shape, size, ax, ay, az, value, showValue);
+      draw(context, shape, size, ax, ay, az, value, showValue, target);
       if (now - started < idle) {
         frame = requestAnimationFrame(tick);
       }
