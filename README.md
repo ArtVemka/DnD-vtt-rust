@@ -1,6 +1,6 @@
 # D&D Table, Rust port
 
-Перенос `E:\DnD` (Electron + Node + vanilla JS) на Rust. Эталонный JS-проект не
+Перенос https://github.com/ArtVemka/dnd-table (Electron + Node + vanilla JS) на Rust. Эталонный JS-проект не
 трогаем: он остаётся оракулом поведения, пока паритет не подтверждён тестами.
 
 ## Что уже есть
